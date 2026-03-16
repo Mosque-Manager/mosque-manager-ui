@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Building2,
   Users,
+  CreditCard,
   LogOut,
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
@@ -17,6 +18,7 @@ import type { SessionUser } from '@/types';
 interface SidebarProps {
   user: SessionUser;
   mobile?: boolean;
+  onNavigate?: () => void;
 }
 
 interface NavItem {
@@ -26,7 +28,7 @@ interface NavItem {
   show: boolean;
 }
 
-export default function Sidebar({ user, mobile = false }: SidebarProps) {
+export default function Sidebar({ user, mobile = false, onNavigate }: SidebarProps) {
   const pathname = usePathname();
 
   const navItems: NavItem[] = [
@@ -46,6 +48,12 @@ export default function Sidebar({ user, mobile = false }: SidebarProps) {
       label: 'Contributors',
       href: '/contributors',
       icon: <Users className="h-4 w-4" />,
+      show: !user.isSuperAdmin && user.role === 'admin',
+    },
+    {
+      label: 'Payments',
+      href: '/payments',
+      icon: <CreditCard className="h-4 w-4" />,
       show: !user.isSuperAdmin && user.role === 'admin',
     },
   ];
@@ -68,6 +76,7 @@ export default function Sidebar({ user, mobile = false }: SidebarProps) {
           <Link
             key={item.href}
             href={item.href}
+            onClick={onNavigate}
             className={cn(
               'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground',
               pathname === item.href

@@ -48,3 +48,39 @@ export interface ContributorData {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export type PaymentMethod = 'cash' | 'upi' | 'bank_transfer' | 'other';
+
+export interface PaymentData {
+  _id: string;
+  mosqueId: string;
+  contributorId: string;
+  amount: number;
+  month: number;
+  year: number;
+  paidAt: Date;
+  method: PaymentMethod;
+  note?: string;
+  recordedBy: string;
+  createdAt: Date;
+}
+
+export interface PaymentWithContributor extends PaymentData {
+  contributorName: string;
+  contributorPhone: string;
+  fixedMonthlyAmount: number;
+}
+
+export interface MonthlyPaymentRow {
+  contributor: ContributorData;
+  payment: PaymentData | null;
+}
+
+export interface PaymentSummary {
+  totalExpected: number;
+  totalCollected: number;
+  totalPending: number;
+  paidCount: number;
+  unpaidCount: number;
+  totalContributors: number;
+}

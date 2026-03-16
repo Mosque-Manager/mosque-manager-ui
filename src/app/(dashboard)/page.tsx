@@ -3,11 +3,12 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Building2, Users, ArrowRight } from 'lucide-react';
+import { Building2, Users, ArrowRight, CheckCircle2, XCircle } from 'lucide-react';
 import mongoose from 'mongoose';
 import dbConnect from '@/lib/db';
 import Mosque from '@/lib/models/Mosque';
 import Contributor from '@/lib/models/Contributor';
+import Payment from '@/lib/models/Payment';
 import { formatCurrency } from '@/lib/utils';
 import type { SessionUser } from '@/types';
 
@@ -111,19 +112,38 @@ export default async function DashboardPage() {
   let mosqueName = '';
   let contributorCount = 0;
   let expectedMonthly = 0;
+  let collectedThisMonth = 0;
+  let paidCount = 0;
 
   if (mosqueId) {
-    const [mosque, contribCount, monthlyAgg] = await Promise.all([
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
+    const mosqueObjId = new mongoose.Types.ObjectId(mosqueId);
+
+    const [mosque, contribCount, monthlyAgg, paymentsAgg] = await Promise.all([
       Mosque.findById(mosqueId).lean(),
       Contributor.countDocuments({ mosqueId, isActive: true }),
       Contributor.aggregate([
-        { $match: { mosqueId: new mongoose.Types.ObjectId(mosqueId), isActive: true } },
+        { $match: { mosqueId: mosqueObjId, isActive: true } },
         { $group: { _id: null, total: { $sum: '$fixedMonthlyAmount' } } },
       ]).then((r) => r[0]?.total || 0),
+      Payment.aggregate([
+        { $match: { mosqueId: mosqueObjId, month: currentMonth, year: currentYear } },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: '$amount' },
+            count: { $sum: 1 },
+          },
+        },
+      ]).then((r) => r[0] || { total: 0, count: 0 }),
     ]);
     mosqueName = mosque?.name || '';
     contributorCount = contribCount;
     expectedMonthly = monthlyAgg;
+    collectedThisMonth = paymentsAgg.total;
+    paidCount = paymentsAgg.count;
   }
 
   return (
@@ -186,20 +206,30 @@ export default async function DashboardPage() {
                 <CardTitle className="text-sm font-medium">
                   Collected
                 </CardTitle>
+                <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">₹0</div>
-                <p className="text-xs text-muted-foreground">This month</p>
+                <div className="text-2xl font-bold">
+                  {formatCurrency(collectedThisMonth)}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {paidCount}/{contributorCount} paid this month
+                </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Balance</CardTitle>
+                <CardTitle className="text-sm font-medium">Pending</CardTitle>
+                <XCircle className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">₹0</div>
-                <p className="text-xs text-muted-foreground">Cumulative</p>
+                <div className="text-2xl font-bold">
+                  {formatCurrency(expectedMonthly - collectedThisMonth)}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {contributorCount - paidCount} unpaid this month
+                </p>
               </CardContent>
             </Card>
           </div>

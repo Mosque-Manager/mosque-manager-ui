@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { requireRole } from '@/lib/rbac';
 import { getContributor } from '@/lib/actions/contributor';
+import { getContributorPayments } from '@/lib/actions/payment';
 import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +12,14 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Pencil, ArrowLeft } from 'lucide-react';
 
 interface ContributorDetailPageProps {
@@ -26,6 +35,20 @@ export default async function ContributorDetailPage({
   if (!contributor) {
     notFound();
   }
+
+  const payments = await getContributorPayments(params.id);
+
+  const MONTH_NAMES = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ];
+
+  const methodLabels: Record<string, string> = {
+    cash: 'Cash',
+    upi: 'UPI',
+    bank_transfer: 'Bank Transfer',
+    other: 'Other',
+  };
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -96,15 +119,53 @@ export default async function ContributorDetailPage({
         </CardContent>
       </Card>
 
-      {/* Payment history placeholder — will be implemented in R3 */}
       <Card>
         <CardHeader>
           <CardTitle>Payment History</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Payment tracking will be available in a future update.
-          </p>
+          {payments.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No payments recorded yet.
+            </p>
+          ) : (
+            <div className="rounded-md border overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Month</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead>Method</TableHead>
+                    <TableHead>Paid On</TableHead>
+                    <TableHead className="hidden sm:table-cell">Note</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {payments.map((p) => (
+                    <TableRow key={p._id}>
+                      <TableCell className="font-medium">
+                        {MONTH_NAMES[p.month - 1]} {p.year}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(p.amount)}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">
+                          {methodLabels[p.method] || p.method}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {new Date(p.paidAt).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell text-muted-foreground">
+                        {p.note || '—'}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

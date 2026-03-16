@@ -1,7 +1,7 @@
 # Models Spec
 
 > Last Updated: 16 March 2026
-> Release: R1–R2
+> Release: R1–R3
 
 ## Overview
 Mongoose models defining the MongoDB schema for the Masjid Manager application. All models use timestamps and enforce data integrity via indexes and validation.
@@ -14,6 +14,7 @@ Mongoose models defining the MongoDB schema for the Masjid Manager application. 
 | `Mosque.ts` | Mosque (tenant) entity | R1 |
 | `MosqueMember.ts` | User-Mosque relationship with role | R1 |
 | `Contributor.ts` | Mosque contributor with monthly amount | R2 |
+| `Payment.ts` | Contributor monthly payment records | R3 |
 
 ## Contracts
 
@@ -89,9 +90,37 @@ User (1) ──── (*) MosqueMember (*) ──── (1) Mosque
 
 ---
 
+## 5. Payment (`src/lib/models/Payment.ts`)
+
+### Fields
+| Field | Type | Required | Default | Notes |
+|-------|------|----------|---------|-------|
+| `mosqueId` | ObjectId (ref: Mosque) | Yes | — | Scoped to mosque |
+| `contributorId` | ObjectId (ref: Contributor) | Yes | — | Who paid |
+| `amount` | Number | Yes | — | Min: 0 |
+| `month` | Number | Yes | — | 1–12 |
+| `year` | Number | Yes | — | e.g. 2026 |
+| `paidAt` | Date | Yes | — | Actual payment date |
+| `method` | String (enum) | No | `cash` | cash, upi, bank_transfer, other |
+| `note` | String | No | — | Trimmed |
+| `recordedBy` | ObjectId (ref: User) | Yes | — | Who recorded it |
+| `createdAt` | Date | Auto | — | |
+
+### Indexes
+- `{ mosqueId: 1, month: 1, year: 1 }` — monthly payment queries
+- `{ mosqueId: 1, contributorId: 1, month: 1, year: 1 }` (unique) — one payment per contributor per month
+
+### Relationships
+- Belongs to one Mosque
+- Belongs to one Contributor
+- Recorded by one User
+
+---
+
 ## Changelog
 
 | Date | Release | Change |
 |------|---------|--------|
+| 16 Mar 2026 | R3 | Added Payment model |
 | 16 Mar 2026 | R2 | Added Contributor model |
 | 16 Mar 2026 | R1 | Initial creation — User, Mosque, MosqueMember models |

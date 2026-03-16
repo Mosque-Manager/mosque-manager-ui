@@ -26,7 +26,7 @@ export default function DashboardShell({ user, children }: DashboardShellProps) 
         >
           <div className="fixed inset-0 bg-black/50" />
           <div className="fixed inset-y-0 left-0 w-64 z-50" onClick={(e) => e.stopPropagation()}>
-            <Sidebar user={user} mobile />
+            <Sidebar user={user} mobile onNavigate={() => setMobileMenuOpen(false)} />
           </div>
         </div>
       )}

@@ -1,7 +1,7 @@
 # Actions Spec
 
 > Last Updated: 16 March 2026
-> Release: R1–R2
+> Release: R1–R3
 
 ## Overview
 Server Actions handling business logic for the Masjid Manager application. All actions are marked with `'use server'` and validate inputs via Zod schemas before processing.
@@ -13,6 +13,7 @@ Server Actions handling business logic for the Masjid Manager application. All a
 | `auth.ts` | User registration | R1 |
 | `mosque.ts` | Mosque CRUD + queries | R1 |
 | `contributor.ts` | Contributor CRUD | R2 |
+| `payment.ts` | Payment recording and queries | R3 |
 
 ## Contracts
 
@@ -117,10 +118,52 @@ Server Actions handling business logic for the Masjid Manager application. All a
 - **Permissions**: Admin only
 - **Logic**: Soft delete — set `isActive: false`
 
+---
+
+## File: `actions/payment.ts`
+
+### `getMonthlyPayments(month, year)`
+- **Input**: `month: number`, `year: number`
+- **Output**: `MonthlyPaymentRow[]` (contributor + payment or null)
+- **Permissions**: Admin only (`requireRole(['admin'])`)
+- **Logic**: Fetch all active contributors and payments for the given month, merge into rows
+
+### `getPaymentSummary(month, year)`
+- **Input**: `month: number`, `year: number`
+- **Output**: `PaymentSummary` (totalExpected, totalCollected, totalPending, paidCount, unpaidCount, totalContributors)
+- **Permissions**: Admin only
+- **Logic**: Aggregate contributors and payments for totals
+
+### `recordPayment(formData)`
+- **Input**: FormData (contributorId, amount, month, year, paidAt, method, note?)
+- **Output**: `ActionResponse`
+- **Permissions**: Admin only
+- **Validation**: `paymentSchema` (Zod)
+- **Logic**: Verify contributor belongs to mosque, check for duplicate (unique index), create payment
+
+### `removePayment(paymentId)`
+- **Input**: `paymentId: string`
+- **Output**: `ActionResponse`
+- **Permissions**: Admin only
+- **Logic**: Delete payment by _id + mosqueId
+
+### `getContributorPayments(contributorId)`
+- **Input**: `contributorId: string`
+- **Output**: `PaymentData[]`
+- **Permissions**: Admin or Member
+- **Logic**: Fetch all payments for contributor, sorted by year/month descending
+
+### `getDashboardPaymentSummary(mosqueId, month, year)`
+- **Input**: `mosqueId: string`, `month: number`, `year: number`
+- **Output**: `PaymentSummary`
+- **Permissions**: Called internally (no RBAC — dashboard page handles auth)
+- **Logic**: Same as getPaymentSummary but accepts mosqueId directly
+
 ## Changelog
 
 | Date | Release | Change |
 |------|---------|--------|
+| 16 Mar 2026 | R3 | Added payment CRUD actions (record, remove, queries, dashboard summary) |
 | 16 Mar 2026 | R2 | Added getMosque, getMosqueContributors actions; Contributors hidden from super admin sidebar |
 | 16 Mar 2026 | R2 | Added contributor CRUD actions |
 | 16 Mar 2026 | R1 | Initial creation — signUp, createMosque, getMosques |
