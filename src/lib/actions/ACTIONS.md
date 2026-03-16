@@ -159,10 +159,49 @@ Server Actions handling business logic for the Masjid Manager application. All a
 - **Permissions**: Called internally (no RBAC — dashboard page handles auth)
 - **Logic**: Same as getPaymentSummary but accepts mosqueId directly
 
+### `getUnpaidContributors(month, year)` — R4
+- **Input**: `month: number`, `year: number`
+- **Output**: `ContributorData[]`
+- **Permissions**: Admin only
+- **Logic**: Returns active contributors who have not paid for the given month/year
+
+### `getUnpaidCount()` — R4
+- **Input**: None (uses current month/year)
+- **Output**: `number`
+- **Permissions**: Admin only
+- **Logic**: Returns count of unpaid contributors for the current month (sidebar badge)
+
+---
+
+## File: `api/cron/reminders/route.ts` — R4
+
+### `GET /api/cron/reminders`
+- **Auth**: Bearer token (`CRON_SECRET` env var)
+- **Output**: `{ ok, month, year, mosquesChecked, totalUnpaid, details[] }`
+- **Logic**: Queries all active mosques, counts unpaid contributors per mosque, logs results
+- **Schedule**: 5th of each month (via Vercel Cron)
+
+---
+
+## Utility Functions: `src/lib/utils.ts` — R4
+
+### `generateWhatsAppLink(phone, message, countryCode?)`
+- **Input**: `phone: string`, `message: string`, `countryCode: string` (default `'91'`)
+- **Output**: `string` — `https://wa.me/<phone>?text=<encoded message>`
+
+### `generateReminderMessage(mosqueName, amount, month, year, lang?)`
+- **Input**: `mosqueName: string`, `amount: number`, `month: number`, `year: number`, `lang: 'en' | 'hi' | 'ur'`
+- **Output**: `string` — Pre-filled reminder message in the selected language
+
+### `getMonthName(month, lang?)`
+- **Input**: `month: number` (1-12), `lang: 'en' | 'hi' | 'ur'`
+- **Output**: `string` — Localized month name
+
 ## Changelog
 
 | Date | Release | Change |
 |------|---------|--------|
+| 16 Mar 2026 | R4 | Added getUnpaidContributors, getUnpaidCount, cron endpoint, WhatsApp utils |
 | 16 Mar 2026 | R3 | Added payment CRUD actions (record, remove, queries, dashboard summary) |
 | 16 Mar 2026 | R2 | Added getMosque, getMosqueContributors actions; Contributors hidden from super admin sidebar |
 | 16 Mar 2026 | R2 | Added contributor CRUD actions |

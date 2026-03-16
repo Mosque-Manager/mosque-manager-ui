@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import {
   getMonthlyPayments,
   getPaymentSummary,
@@ -151,11 +152,18 @@ export default function PaymentsClient({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Payments</h1>
-        <p className="text-muted-foreground">
-          Track monthly contributor payments
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Payments</h1>
+          <p className="text-muted-foreground">
+            Track monthly contributor payments
+          </p>
+        </div>
+        <Link href="/payments/reminders">
+          <Button variant="outline" size="sm">
+            Send Reminders
+          </Button>
+        </Link>
       </div>
 
       {/* Month/Year Selector */}

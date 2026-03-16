@@ -9,6 +9,7 @@ import { paymentSchema } from '@/lib/validations/payment';
 import type {
   ActionResponse,
   PaymentData,
+  ContributorData,
   MonthlyPaymentRow,
   PaymentSummary,
 } from '@/types';
@@ -269,4 +270,64 @@ export async function getDashboardPaymentSummary(
     unpaidCount: contributors.length - payments.length,
     totalContributors: contributors.length,
   };
+}
+
+/**
+ * Get unpaid contributors for a given month/year (for reminders page).
+ */
+export async function getUnpaidContributors(
+  month: number,
+  year: number
+): Promise<ContributorData[]> {
+  const user = await requireRole(['admin']);
+  const mosqueId = getMosqueId(user);
+
+  await dbConnect();
+
+  const mosqueObjId = new mongoose.Types.ObjectId(mosqueId);
+
+  const [contributors, payments] = await Promise.all([
+    Contributor.find({ mosqueId: mosqueObjId, isActive: true })
+      .sort({ name: 1 })
+      .lean(),
+    Payment.find({ mosqueId: mosqueObjId, month, year }).lean(),
+  ]);
+
+  const paidIds = new Set(payments.map((p) => String(p.contributorId)));
+
+  return contributors
+    .filter((c) => !paidIds.has(String(c._id)))
+    .map((c) => ({
+      _id: String(c._id),
+      mosqueId: String(c.mosqueId),
+      name: c.name,
+      phone: c.phone,
+      fixedMonthlyAmount: c.fixedMonthlyAmount,
+      address: c.address,
+      isActive: c.isActive,
+      createdAt: c.createdAt,
+      updatedAt: c.updatedAt,
+    }));
+}
+
+/**
+ * Get unpaid count for current month (for sidebar badge).
+ */
+export async function getUnpaidCount(): Promise<number> {
+  const user = await requireRole(['admin']);
+  const mosqueId = getMosqueId(user);
+
+  await dbConnect();
+
+  const now = new Date();
+  const month = now.getMonth() + 1;
+  const year = now.getFullYear();
+  const mosqueObjId = new mongoose.Types.ObjectId(mosqueId);
+
+  const [contributorCount, paymentCount] = await Promise.all([
+    Contributor.countDocuments({ mosqueId: mosqueObjId, isActive: true }),
+    Payment.countDocuments({ mosqueId: mosqueObjId, month, year }),
+  ]);
+
+  return contributorCount - paymentCount;
 }

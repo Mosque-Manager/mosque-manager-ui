@@ -13,11 +13,13 @@ import { signOut } from 'next-auth/react';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import type { SessionUser } from '@/types';
 
 interface SidebarProps {
   user: SessionUser;
   mobile?: boolean;
+  unpaidCount?: number;
   onNavigate?: () => void;
 }
 
@@ -26,9 +28,10 @@ interface NavItem {
   href: string;
   icon: React.ReactNode;
   show: boolean;
+  badge?: number;
 }
 
-export default function Sidebar({ user, mobile = false, onNavigate }: SidebarProps) {
+export default function Sidebar({ user, mobile = false, unpaidCount = 0, onNavigate }: SidebarProps) {
   const pathname = usePathname();
 
   const navItems: NavItem[] = [
@@ -55,6 +58,7 @@ export default function Sidebar({ user, mobile = false, onNavigate }: SidebarPro
       href: '/payments',
       icon: <CreditCard className="h-4 w-4" />,
       show: !user.isSuperAdmin && user.role === 'admin',
+      badge: unpaidCount > 0 ? unpaidCount : undefined,
     },
   ];
 
@@ -86,6 +90,11 @@ export default function Sidebar({ user, mobile = false, onNavigate }: SidebarPro
           >
             {item.icon}
             {item.label}
+            {item.badge !== undefined && (
+              <Badge variant="destructive" className="ml-auto h-5 min-w-[20px] px-1 text-xs">
+                {item.badge}
+              </Badge>
+            )}
           </Link>
         ))}
       </nav>

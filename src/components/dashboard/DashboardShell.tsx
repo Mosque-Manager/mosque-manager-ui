@@ -8,15 +8,16 @@ import type { SessionUser } from '@/types';
 interface DashboardShellProps {
   user: SessionUser;
   children: React.ReactNode;
+  unpaidCount?: number;
 }
 
-export default function DashboardShell({ user, children }: DashboardShellProps) {
+export default function DashboardShell({ user, children, unpaidCount = 0 }: DashboardShellProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Desktop sidebar */}
-      <Sidebar user={user} />
+      <Sidebar user={user} unpaidCount={unpaidCount} />
 
       {/* Mobile sidebar overlay */}
       {mobileMenuOpen && (
@@ -26,7 +27,7 @@ export default function DashboardShell({ user, children }: DashboardShellProps) 
         >
           <div className="fixed inset-0 bg-black/50" />
           <div className="fixed inset-y-0 left-0 w-64 z-50" onClick={(e) => e.stopPropagation()}>
-            <Sidebar user={user} mobile onNavigate={() => setMobileMenuOpen(false)} />
+            <Sidebar user={user} mobile unpaidCount={unpaidCount} onNavigate={() => setMobileMenuOpen(false)} />
           </div>
         </div>
       )}
