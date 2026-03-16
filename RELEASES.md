@@ -143,9 +143,10 @@ eslint-config-next    # Next.js ESLint config
 
 **Key Rules:**
 - Anyone can sign up and register **one mosque** → automatically becomes **Admin** of that mosque
-- A regular user can only register one mosque (Super Admin can create multiple)
+- A regular user can only register one mosque
+- Super Admin does NOT create mosques — mosques are self-registered by users
 - Admin can add members (read-only) or promote them to Admin
-- Super Admin (first user in the system) can access and manage everything
+- Super Admin (first user in the system) can view and manage all mosques
 
 ### RBAC Implementation Strategy
 
@@ -456,12 +457,12 @@ mosque/
     │   │
     │   ├── (dashboard)/
     │   │   ├── layout.tsx              ← Dashboard layout (sidebar + navbar)
-    │   │   ├── page.tsx                ← Dashboard home (balance overview)
+    │   │   ├── page.tsx                ← Dashboard home (role-aware)
     │   │   │
-    │   │   ├── mosques/                ← [Super Admin] Mosque management
-    │   │   │   ├── page.tsx            ← List all mosques
-    │   │   │   ├── new/page.tsx        ← Create mosque form
-    │   │   │   └── [id]/page.tsx       ← Edit mosque
+    │   │   ├── mosques/                ← Mosque management
+    │   │   │   ├── page.tsx            ← List mosques (role-scoped)
+    │   │   │   ├── new/page.tsx        ← Register mosque form
+    │   │   │   └── [id]/page.tsx       ← Mosque detail (read-only)
     │   │   │
     │   │   ├── contributors/           ← [R2] Contributor management
     │   │   │   ├── page.tsx            ← Contributor list
@@ -480,8 +481,6 @@ mosque/
     │   │   │   ├── imams/
     │   │   │   │   ├── new/page.tsx    ← Add imam
     │   │   │   │   └── [id]/page.tsx   ← Imam detail + salary history
-    │   │   │   └── my-salary/
-    │   │   │       └── page.tsx        ← [Imam role] Own salary view
     │   │   │
     │   │   ├── expenses/               ← [R6] Expense tracking
     │   │   │   ├── page.tsx            ← Expense list
@@ -906,7 +905,7 @@ One-tap WhatsApp reminders for contributors who haven't paid yet.
 | **Status** | 🔲 Not Started |
 
 ### Goal
-Track imam salaries and payment history. Imam can log in and view their own salary.
+Track imam salaries and payment history.
 
 ### Tasks
 
@@ -922,7 +921,6 @@ Track imam salaries and payment history. Imam can log in and view their own sala
   - `deactivateImam(id)` — set endDate and isActive: false
   - `recordSalaryPayment(formData)` — mark salary as paid for a month
   - `getSalaryHistory(imamId)` — all salary payments for an imam
-  - `getMySalary(userId)` — for imam role: own salary history
 - [ ] **5.4** Create salary management page:
   - `src/app/(dashboard)/salary/page.tsx`
   - Imam list: Name, Monthly Salary, Status (active/inactive), Actions
@@ -931,15 +929,9 @@ Track imam salaries and payment history. Imam can log in and view their own sala
 - [ ] **5.5** Create add/edit imam pages:
   - `src/app/(dashboard)/salary/imams/new/page.tsx`
   - `src/app/(dashboard)/salary/imams/[id]/page.tsx` — detail + salary history + record payment
-- [ ] **5.6** Create imam self-service page:
-  - `src/app/(dashboard)/salary/my-salary/page.tsx`
-  - Read-only salary payment history table (month, year, amount, paid date)
-  - Only accessible by users with `imam` role
-- [ ] **5.7** When creating an imam, optionally invite them as a user:
-  - Create user account with `imam` role in MosqueMembers
-  - Or link to existing user by email
-- [ ] **5.8** Update sidebar: add "Salary" link (admin, treasurer); add "My Salary" link (imam role)
-- [ ] **5.9** Update spec files:
+- [ ] **5.6** When creating an imam, optionally link to an existing user account by email
+- [ ] **5.7** Update sidebar: add "Salary" link (visible to admin role)
+- [ ] **5.8** Update spec files:
   - `src/lib/models/MODELS.md` — add Imam and SalaryPayment model documentation
   - `src/lib/actions/ACTIONS.md` — add salary action signatures and permissions
   - `src/lib/validations/VALIDATIONS.md` — add salary validation schema
@@ -954,7 +946,6 @@ Track imam salaries and payment history. Imam can log in and view their own sala
 | `src/app/(dashboard)/salary/page.tsx` | Create |
 | `src/app/(dashboard)/salary/imams/new/page.tsx` | Create |
 | `src/app/(dashboard)/salary/imams/[id]/page.tsx` | Create |
-| `src/app/(dashboard)/salary/my-salary/page.tsx` | Create |
 | `src/components/dashboard/Sidebar.tsx` | Modify |
 | `src/lib/models/MODELS.md` | Update (add Imam, SalaryPayment models) |
 | `src/lib/actions/ACTIONS.md` | Update (add salary actions) |
@@ -965,8 +956,6 @@ Track imam salaries and payment history. Imam can log in and view their own sala
 - [ ] Admin can record monthly salary payment
 - [ ] One salary payment per imam per month (unique constraint)
 - [ ] Admin can view salary payment history for each imam
-- [ ] Imam can log in and see only their own salary history
-- [ ] Imam cannot access any other page (RBAC enforced)
 - [ ] Inactive imams are hidden by default but viewable via filter
 
 ---
@@ -1001,7 +990,7 @@ Complete financial picture — track where money comes from (donations) and wher
   - `src/app/(dashboard)/donations/new/page.tsx` — add donation form (donor name, phone, amount, date, purpose, anonymous toggle)
 - [ ] **6.6** Expense categories (hardcoded enum for now):
   - Electricity, Water, Maintenance, Cleaning, Miscellaneous
-- [ ] **6.7** Update sidebar: add "Expenses" and "Donations" links (admin, treasurer)
+- [ ] **6.7** Update sidebar: add "Expenses" and "Donations" links (visible to admin role)
 - [ ] **6.8** Update spec files:
   - `src/lib/models/MODELS.md` — add Expense and Donation model documentation
   - `src/lib/actions/ACTIONS.md` — add expense and donation action signatures and permissions
@@ -1032,7 +1021,6 @@ Complete financial picture — track where money comes from (donations) and wher
 - [ ] Expenses are filterable by category and date range
 - [ ] Donations are filterable by date range and searchable by donor name
 - [ ] List pages show running totals
-- [ ] Treasurer role can access expense and donation pages
 
 ---
 
@@ -1066,11 +1054,8 @@ At-a-glance financial health dashboard — the homepage every admin sees.
   - **Bottom row**: Quick actions (Record Payment, Add Expense, Send Reminders) + Recent Activity list
 - [ ] **7.3** Create month/year navigation component:
   - `src/components/shared/MonthYearPicker.tsx` — reusable across dashboard, payments, reports
-- [ ] **7.4** Implement Treasurer role scoping:
-  - Update `rbac.ts` to allow treasurer access to: payments, salary, expenses, donations, dashboard, reports
-  - Restrict treasurer from: contributors CRUD (read-only), members management, events, settings
-- [ ] **7.5** Add cumulative balance display — running total that carries forward month to month
-- [ ] **7.6** Update spec files:
+- [ ] **7.4** Add cumulative balance display — running total that carries forward month to month
+- [ ] **7.5** Update spec files:
   - `src/lib/actions/ACTIONS.md` — add dashboard aggregation action signatures
 
 ### Balance Formula
@@ -1085,7 +1070,6 @@ Cumulative Balance = Sum of all Monthly Balances since mosque creation
 | `src/lib/actions/dashboard.ts` | Create |
 | `src/app/(dashboard)/page.tsx` | Major Modify |
 | `src/components/shared/MonthYearPicker.tsx` | Create |
-| `src/lib/rbac.ts` | Modify (treasurer permissions) |
 | `src/lib/actions/ACTIONS.md` | Update (add dashboard actions) |
 
 ### Acceptance Criteria
@@ -1093,7 +1077,6 @@ Cumulative Balance = Sum of all Monthly Balances since mosque creation
 - [ ] Balance calculation: (contributions + donations) - (salary + expenses) = correct amount
 - [ ] Cumulative (all-time) balance is displayed and correct
 - [ ] Month-wise breakdown shows 12 months of data
-- [ ] Treasurer can access financial pages but not member/contributor management
 - [ ] Dashboard loads within 2 seconds (aggregation queries are indexed)
 
 ---
@@ -1118,7 +1101,7 @@ Full multi-role, multi-tenant access control with member management.
   - Search by name/email
 - [ ] **8.2** Create invite member page:
   - `src/app/(dashboard)/members/invite/page.tsx`
-  - Form: Email, Role (dropdown: admin, treasurer, imam, member)
+  - Form: Email, Role (dropdown: admin, member)
   - If user exists: add to mosque with role
   - If user doesn't exist: create user account with temporary password, link to mosque
 - [ ] **8.3** Create server actions in `src/lib/actions/member.ts`:
@@ -1127,15 +1110,12 @@ Full multi-role, multi-tenant access control with member management.
   - `changeRole(mosqueId, userId, newRole)` — update member's role
   - `removeMember(mosqueId, userId)` — remove from mosque
 - [ ] **8.4** Implement role-based sidebar navigation:
-  - Super Admin: Mosques, All sections
+  - Super Admin: Mosques, Dashboard (platform-level stats)
   - Admin: All sections within their mosque
-  - Treasurer: Dashboard, Payments, Salary, Expenses, Donations, Reports
-  - Imam: Dashboard (limited), My Salary
-  - Member: Dashboard (read-only)
+  - Member: Dashboard (read-only), Events
 - [ ] **8.5** Super admin features:
   - `src/app/(dashboard)/mosques/page.tsx` — list all mosques with member counts, created date
-  - Ability to view/manage any mosque
-  - Switch between mosques
+  - Ability to view any mosque's details and contributors
 - [ ] **8.6** Add "View-only" enforcement:
   - Member role sees dashboard and events only
   - All action buttons/forms hidden for member role
@@ -1160,8 +1140,7 @@ Full multi-role, multi-tenant access control with member management.
 - [ ] Admin can remove a member from the mosque
 - [ ] Sidebar navigation reflects the user's role correctly
 - [ ] View-only members cannot see action buttons or forms
-- [ ] Imam can only see "My Salary" in sidebar
-- [ ] Super admin can switch between mosques
+- [ ] Super admin can view any mosque's details and contributors
 - [ ] Data is fully isolated between mosques (verified with 2+ mosques)
 
 ---
@@ -1257,7 +1236,7 @@ Downloadable monthly and yearly financial reports as PDF.
   - Preview section showing summary before download
 - [ ] **10.4** Server actions to fetch report data:
   - `src/lib/actions/report.ts` — `getMonthlyReportData(mosqueId, month, year)`, `getYearlyReportData(mosqueId, year)`
-- [ ] **10.5** Update sidebar: add "Reports" link (admin, treasurer)
+- [ ] **10.5** Update sidebar: add "Reports" link (visible to admin role)
 - [ ] **10.6** Create spec file:
   - `src/lib/reports/REPORTS.md` — document report structure, sections, data sources, formatting rules
 - [ ] **10.7** Update spec files:
@@ -1280,7 +1259,6 @@ Downloadable monthly and yearly financial reports as PDF.
 - [ ] PDF header shows correct mosque name and date
 - [ ] Numbers in PDF match dashboard numbers exactly
 - [ ] PDF downloads successfully on mobile and desktop browsers
-- [ ] Treasurer can access reports page
 
 ---
 
