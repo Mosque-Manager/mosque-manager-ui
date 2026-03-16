@@ -590,7 +590,7 @@ mosque/
 | **Status** | 🔲 Not Started |
 
 ### Goal
-A working app where users can sign up, log in, and a super admin can create a mosque with a basic dashboard shell.
+A working app where users can sign up, log in, register a mosque (one per user), and see a role-aware dashboard.
 
 ### Tasks
 
@@ -628,11 +628,19 @@ A working app where users can sign up, log in, and a super admin can create a mo
   - `src/components/dashboard/Sidebar.tsx` — navigation links (role-aware)
   - `src/components/dashboard/Navbar.tsx` — user menu, mosque name, logout
 - [ ] **1.14** Create dashboard home:
-  - `src/app/(dashboard)/page.tsx` — welcome message, placeholder summary cards
-- [ ] **1.15** Create mosque management (super admin only):
-  - `src/app/(dashboard)/mosques/page.tsx` — list mosques
-  - `src/app/(dashboard)/mosques/new/page.tsx` — create mosque form (name, address, city)
-  - `src/lib/actions/mosque.ts` — `createMosque(formData)`: create mosque + auto-assign creator as mosque admin in MosqueMembers
+  - `src/app/(dashboard)/page.tsx` — role-aware dashboard:
+    - Super admin: total mosques, total contributors, expected monthly, quick link to mosques
+    - Mosque admin: contributor count, expected monthly, collected & balance placeholders
+    - User without mosque: "Register Mosque" CTA
+- [ ] **1.15** Create mosque management:
+  - `src/app/(dashboard)/mosques/page.tsx` — list mosques (super admin sees all; regular users see theirs)
+  - `src/app/(dashboard)/mosques/new/page.tsx` — create mosque form (name, address, city). Hidden from super admin.
+  - `src/app/(dashboard)/mosques/[id]/page.tsx` — mosque detail page (read-only, shows info + contributors)
+  - `src/lib/actions/mosque.ts`:
+    - `createMosque(formData)` — create mosque + auto-assign creator as admin. One mosque per regular user.
+    - `getMosques()` — super admin sees all; regular users see their memberships
+    - `getMosque(id)` — single mosque details with access control
+    - `getMosqueContributors(mosqueId)` — list active contributors for a mosque
 - [ ] **1.16** Create `src/types/index.ts` — shared TypeScript interfaces
 - [ ] **1.17** Create `src/lib/utils.ts` — `cn()` class merger utility
 - [ ] **1.18** Create module spec files:
@@ -661,6 +669,7 @@ A working app where users can sign up, log in, and a super admin can create a mo
 | `src/app/(dashboard)/layout.tsx` | Create |
 | `src/app/(dashboard)/page.tsx` | Create |
 | `src/app/(dashboard)/mosques/page.tsx` | Create |
+| `src/app/(dashboard)/mosques/[id]/page.tsx` | Create |
 | `src/app/(dashboard)/mosques/new/page.tsx` | Create |
 | `src/components/dashboard/Sidebar.tsx` | Create |
 | `src/components/dashboard/Navbar.tsx` | Create |
@@ -674,11 +683,13 @@ A working app where users can sign up, log in, and a super admin can create a mo
 - [ ] User can sign up with name, email, phone, password
 - [ ] User can log in with email + password
 - [ ] First registered user becomes super admin automatically
-- [ ] Super admin can create a new mosque
+- [ ] Any authenticated user can register a mosque (one per regular user)
 - [ ] After creating a mosque, creator is auto-assigned as mosque admin
+- [ ] Super admin does NOT see "Create Mosque" button (mosques are self-registered by users)
+- [ ] Super admin dashboard shows platform-level stats (total mosques, contributors, expected monthly)
+- [ ] Mosque admin dashboard shows their mosque stats (contributors, expected monthly)
 - [ ] Dashboard sidebar shows navigation links
 - [ ] Unauthenticated users are redirected to `/login`
-- [ ] Non-super-admin users cannot access `/mosques/new`
 
 ---
 

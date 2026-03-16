@@ -15,8 +15,8 @@ export default async function MosquesPage() {
   const user = await getSessionUser();
   const mosques = await getMosques();
 
-  // Non-super-admin users who already have a mosque cannot create another
-  const canCreateMosque = user.isSuperAdmin || mosques.length === 0;
+  // Super admin doesn't create mosques. Regular users can register one mosque.
+  const canCreateMosque = !user.isSuperAdmin && mosques.length === 0;
 
   return (
     <div className="space-y-6">
@@ -24,7 +24,7 @@ export default async function MosquesPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Mosques</h1>
           <p className="text-muted-foreground">
-            Your registered mosques
+            {user.isSuperAdmin ? 'All registered mosques' : 'Your registered mosques'}
           </p>
         </div>
         {canCreateMosque && (

@@ -1,7 +1,7 @@
 # Validations Spec
 
 > Last Updated: 16 March 2026
-> Release: R1
+> Release: R1–R2
 
 ## Overview
 Zod schemas for validating user input on both client and server side. Each schema mirrors the corresponding Mongoose model fields and is used by Server Actions.
@@ -12,6 +12,7 @@ Zod schemas for validating user input on both client and server side. Each schem
 |------|---------|------------|
 | `auth.ts` | Signup and login form validation | R1 |
 | `mosque.ts` | Mosque creation form validation | R1 |
+| `contributor.ts` | Contributor form validation | R2 |
 
 ## Contracts
 

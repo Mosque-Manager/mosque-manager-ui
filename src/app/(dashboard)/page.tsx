@@ -1,6 +1,14 @@
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Building2, Users, ArrowRight } from 'lucide-react';
+import mongoose from 'mongoose';
+import dbConnect from '@/lib/db';
+import Mosque from '@/lib/models/Mosque';
+import Contributor from '@/lib/models/Contributor';
+import { formatCurrency } from '@/lib/utils';
 import type { SessionUser } from '@/types';
 
 export default async function DashboardPage() {
@@ -11,6 +19,112 @@ export default async function DashboardPage() {
   }
 
   const user = session.user as SessionUser;
+  await dbConnect();
+
+  if (user.isSuperAdmin) {
+    // Super Admin Dashboard
+    const [totalMosques, totalContributors, totalExpectedMonthly] =
+      await Promise.all([
+        Mosque.countDocuments({ isActive: true }),
+        Contributor.countDocuments({ isActive: true }),
+        Contributor.aggregate([
+          { $match: { isActive: true } },
+          { $group: { _id: null, total: { $sum: '$fixedMonthlyAmount' } } },
+        ]).then((r) => r[0]?.total || 0),
+      ]);
+
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground">
+            Welcome back, {user.name}! (Super Admin)
+          </p>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Total Mosques
+              </CardTitle>
+              <Building2 className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{totalMosques}</div>
+              <p className="text-xs text-muted-foreground">Registered</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Total Contributors
+              </CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{totalContributors}</div>
+              <p className="text-xs text-muted-foreground">Across all mosques</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Expected Monthly
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {formatCurrency(totalExpectedMonthly)}
+              </div>
+              <p className="text-xs text-muted-foreground">All mosques combined</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold">Manage Mosques</h3>
+                <p className="text-sm text-muted-foreground">
+                  View and manage all registered mosques
+                </p>
+              </div>
+              <Link href="/mosques">
+                <Button variant="outline" size="sm">
+                  View All
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Mosque Admin / Member Dashboard
+  const mosqueId = user.mosqueId;
+  let mosqueName = '';
+  let contributorCount = 0;
+  let expectedMonthly = 0;
+
+  if (mosqueId) {
+    const [mosque, contribCount, monthlyAgg] = await Promise.all([
+      Mosque.findById(mosqueId).lean(),
+      Contributor.countDocuments({ mosqueId, isActive: true }),
+      Contributor.aggregate([
+        { $match: { mosqueId: new mongoose.Types.ObjectId(mosqueId), isActive: true } },
+        { $group: { _id: null, total: { $sum: '$fixedMonthlyAmount' } } },
+      ]).then((r) => r[0]?.total || 0),
+    ]);
+    mosqueName = mosque?.name || '';
+    contributorCount = contribCount;
+    expectedMonthly = monthlyAgg;
+  }
 
   return (
     <div className="space-y-6">
@@ -18,71 +132,78 @@ export default async function DashboardPage() {
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground">
           Welcome back, {user.name}!
-          {user.isSuperAdmin && ' (Super Admin)'}
+          {mosqueName && ` — ${mosqueName}`}
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Collected
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">₹0</div>
-            <p className="text-xs text-muted-foreground">This month</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">₹0</div>
-            <p className="text-xs text-muted-foreground">This month</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Expenses</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">₹0</div>
-            <p className="text-xs text-muted-foreground">This month</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Balance</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">₹0</div>
-            <p className="text-xs text-muted-foreground">Cumulative</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {!user.mosqueId && user.isSuperAdmin && (
+      {!mosqueId ? (
         <Card>
           <CardContent className="pt-6">
             <div className="text-center space-y-2">
+              <Building2 className="mx-auto h-12 w-12 text-muted-foreground" />
               <h3 className="text-lg font-semibold">Get Started</h3>
               <p className="text-muted-foreground">
-                Create your first mosque to start managing finances.
+                Register your mosque to start managing it.
               </p>
-              <a
-                href="/mosques/new"
-                className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-              >
-                Create Mosque
-              </a>
+              <Link href="/mosques/new">
+                <Button>Register Mosque</Button>
+              </Link>
             </div>
           </CardContent>
         </Card>
+      ) : (
+        <>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Contributors
+                </CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{contributorCount}</div>
+                <p className="text-xs text-muted-foreground">Active</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Expected Monthly
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {formatCurrency(expectedMonthly)}
+                </div>
+                <p className="text-xs text-muted-foreground">From contributors</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Collected
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">₹0</div>
+                <p className="text-xs text-muted-foreground">This month</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Balance</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">₹0</div>
+                <p className="text-xs text-muted-foreground">Cumulative</p>
+              </CardContent>
+            </Card>
+          </div>
+        </>
       )}
     </div>
   );

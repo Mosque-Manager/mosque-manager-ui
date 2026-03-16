@@ -1,7 +1,7 @@
 # Models Spec
 
 > Last Updated: 16 March 2026
-> Release: R1
+> Release: R1–R2
 
 ## Overview
 Mongoose models defining the MongoDB schema for the Masjid Manager application. All models use timestamps and enforce data integrity via indexes and validation.
@@ -13,6 +13,7 @@ Mongoose models defining the MongoDB schema for the Masjid Manager application. 
 | `User.ts` | User authentication and profile | R1 |
 | `Mosque.ts` | Mosque (tenant) entity | R1 |
 | `MosqueMember.ts` | User-Mosque relationship with role | R1 |
+| `Contributor.ts` | Mosque contributor with monthly amount | R2 |
 
 ## Contracts
 
