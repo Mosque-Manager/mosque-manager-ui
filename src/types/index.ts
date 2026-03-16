@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'treasurer' | 'imam' | 'member';
+export type UserRole = 'admin' | 'member';
 
 export interface SessionUser {
   id: string;
@@ -35,4 +35,16 @@ export interface ActionResponse<T = undefined> {
   message: string;
   data?: T;
   errors?: Record<string, string[]>;
+}
+
+export interface ContributorData {
+  _id: string;
+  mosqueId: string;
+  name: string;
+  phone: string;
+  fixedMonthlyAmount: number;
+  address?: string;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }

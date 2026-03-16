@@ -23,12 +23,12 @@
 - All forms must validate on both client and server side
 
 ## RBAC (Role-Based Access)
-Every page and server action MUST check permissions. 5 roles:
-1. Super Admin — global access
-2. Mosque Admin — full access within their mosque
-3. Treasurer — finances only
-4. Imam — own salary only
-5. Member — read-only
+Every page and server action MUST check permissions. 3 roles:
+1. Super Admin — global access across all mosques
+2. Admin — full access within their mosque (the person who registered the mosque)
+3. Member — read-only access within their mosque
+
+Anyone can sign up and register a mosque → becomes Admin automatically. Each regular user can only register one mosque.
 
 ## Spec File Requirement
 When creating or modifying any file in `src/lib/models/`, `src/lib/actions/`, `src/lib/validations/`, or `src/lib/reports/`:

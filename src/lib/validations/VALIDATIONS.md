@@ -40,8 +40,22 @@ Zod schemas for validating user input on both client and server side. Each schem
 - **Type Export**: `CreateMosqueInput`
 - **Used By**: `actions/mosque.ts` → `createMosque()`
 
+---
+
+## File: `validations/contributor.ts`
+
+### `contributorSchema`
+- **Fields**:
+  - `name` — string, min 2, max 100
+  - `phone` — string, min 10, max 15, digits only regex
+  - `fixedMonthlyAmount` — number, must be positive
+  - `address` — string, max 500, optional (or empty string)
+- **Type Export**: `ContributorFormData`
+- **Used By**: `actions/contributor.ts`, `ContributorForm.tsx` (client-side)
+
 ## Changelog
 
 | Date | Release | Change |
 |------|---------|--------|
+| 16 Mar 2026 | R2 | Added contributorSchema |
 | 16 Mar 2026 | R1 | Initial creation — signUpSchema, loginSchema, createMosqueSchema |

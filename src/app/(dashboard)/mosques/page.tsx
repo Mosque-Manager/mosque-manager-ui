@@ -1,4 +1,4 @@
-import { requireSuperAdmin } from '@/lib/rbac';
+import { getSessionUser } from '@/lib/rbac';
 import { getMosques } from '@/lib/actions/mosque';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -12,8 +12,11 @@ import {
 import { Building2, Plus } from 'lucide-react';
 
 export default async function MosquesPage() {
-  await requireSuperAdmin();
+  const user = await getSessionUser();
   const mosques = await getMosques();
+
+  // Non-super-admin users who already have a mosque cannot create another
+  const canCreateMosque = user.isSuperAdmin || mosques.length === 0;
 
   return (
     <div className="space-y-6">
@@ -21,15 +24,17 @@ export default async function MosquesPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Mosques</h1>
           <p className="text-muted-foreground">
-            Manage all registered mosques
+            Your registered mosques
           </p>
         </div>
-        <Link href="/mosques/new">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Create Mosque
-          </Button>
-        </Link>
+        {canCreateMosque && (
+          <Link href="/mosques/new">
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Mosque
+            </Button>
+          </Link>
+        )}
       </div>
 
       {mosques.length === 0 ? (
@@ -47,27 +52,29 @@ export default async function MosquesPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {mosques.map((mosque) => (
-            <Card key={mosque._id}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Building2 className="h-5 w-5" />
-                  {mosque.name}
-                </CardTitle>
-                {mosque.city && (
-                  <CardDescription>{mosque.city}</CardDescription>
-                )}
-              </CardHeader>
-              <CardContent>
-                {mosque.address && (
-                  <p className="text-sm text-muted-foreground mb-2">
-                    {mosque.address}
+            <Link key={mosque._id} href={`/mosques/${mosque._id}`}>
+              <Card className="cursor-pointer transition-shadow hover:shadow-md">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Building2 className="h-5 w-5" />
+                    {mosque.name}
+                  </CardTitle>
+                  {mosque.city && (
+                    <CardDescription>{mosque.city}</CardDescription>
+                  )}
+                </CardHeader>
+                <CardContent>
+                  {mosque.address && (
+                    <p className="text-sm text-muted-foreground mb-2">
+                      {mosque.address}
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Created {new Date(mosque.createdAt).toLocaleDateString()}
                   </p>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  Created {new Date(mosque.createdAt).toLocaleDateString()}
-                </p>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       )}

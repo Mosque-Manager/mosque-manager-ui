@@ -3,14 +3,31 @@
 import dbConnect from '@/lib/db';
 import Mosque from '@/lib/models/Mosque';
 import MosqueMember from '@/lib/models/MosqueMember';
-import { requireSuperAdmin } from '@/lib/rbac';
+import { getSessionUser } from '@/lib/rbac';
 import { createMosqueSchema } from '@/lib/validations/mosque';
-import type { ActionResponse, MosqueData } from '@/types';
+import Contributor from '@/lib/models/Contributor';
+import type { ActionResponse, MosqueData, ContributorData } from '@/types';
 
 export async function createMosque(
   formData: FormData
 ): Promise<ActionResponse> {
-  const user = await requireSuperAdmin();
+  const user = await getSessionUser();
+
+  await dbConnect();
+
+  // Non-super-admin users can only create one mosque
+  if (!user.isSuperAdmin) {
+    const existingMembership = await MosqueMember.findOne({
+      userId: user.id,
+      role: 'admin',
+    });
+    if (existingMembership) {
+      return {
+        success: false,
+        message: 'You have already registered a mosque. Each user can register only one mosque.',
+      };
+    }
+  }
 
   const raw = {
     name: formData.get('name') as string,
@@ -52,12 +69,24 @@ export async function createMosque(
 }
 
 export async function getMosques(): Promise<MosqueData[]> {
-  await requireSuperAdmin();
+  const user = await getSessionUser();
   await dbConnect();
 
-  const mosques = await Mosque.find({ isActive: true })
-    .sort({ createdAt: -1 })
-    .lean();
+  let mosques;
+
+  if (user.isSuperAdmin) {
+    // Super admin sees all mosques
+    mosques = await Mosque.find({ isActive: true })
+      .sort({ createdAt: -1 })
+      .lean();
+  } else {
+    // Regular users see only mosques they belong to
+    const memberships = await MosqueMember.find({ userId: user.id }).lean();
+    const mosqueIds = memberships.map((m) => m.mosqueId);
+    mosques = await Mosque.find({ _id: { $in: mosqueIds }, isActive: true })
+      .sort({ createdAt: -1 })
+      .lean();
+  }
 
   return mosques.map((m) => ({
     _id: m._id.toString(),
@@ -69,5 +98,69 @@ export async function getMosques(): Promise<MosqueData[]> {
     isActive: m.isActive,
     createdAt: m.createdAt,
     updatedAt: m.updatedAt,
+  }));
+}
+
+export async function getMosque(id: string): Promise<MosqueData | null> {
+  const user = await getSessionUser();
+  await dbConnect();
+
+  const mosque = await Mosque.findOne({ _id: id, isActive: true }).lean();
+  if (!mosque) return null;
+
+  // Non-super-admin must be a member of this mosque
+  if (!user.isSuperAdmin) {
+    const membership = await MosqueMember.findOne({
+      mosqueId: id,
+      userId: user.id,
+    });
+    if (!membership) return null;
+  }
+
+  return {
+    _id: mosque._id.toString(),
+    name: mosque.name,
+    address: mosque.address,
+    city: mosque.city,
+    phone: mosque.phone,
+    createdBy: mosque.createdBy.toString(),
+    isActive: mosque.isActive,
+    createdAt: mosque.createdAt,
+    updatedAt: mosque.updatedAt,
+  };
+}
+
+export async function getMosqueContributors(
+  mosqueId: string
+): Promise<ContributorData[]> {
+  const user = await getSessionUser();
+  await dbConnect();
+
+  // Non-super-admin must be a member of this mosque
+  if (!user.isSuperAdmin) {
+    const membership = await MosqueMember.findOne({
+      mosqueId,
+      userId: user.id,
+    });
+    if (!membership) return [];
+  }
+
+  const contributors = await Contributor.find({
+    mosqueId,
+    isActive: true,
+  })
+    .sort({ name: 1 })
+    .lean();
+
+  return contributors.map((c) => ({
+    _id: String(c._id),
+    mosqueId: String(c.mosqueId),
+    name: c.name,
+    phone: c.phone,
+    fixedMonthlyAmount: c.fixedMonthlyAmount,
+    address: c.address,
+    isActive: c.isActive,
+    createdAt: c.createdAt,
+    updatedAt: c.updatedAt,
   }));
 }

@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document, Model, Types } from 'mongoose';
 
-export type MemberRole = 'admin' | 'treasurer' | 'imam' | 'member';
+export type MemberRole = 'admin' | 'member';
 
 export interface IMosqueMember extends Document {
   mosqueId: Types.ObjectId;
@@ -22,7 +22,7 @@ const MosqueMemberSchema = new Schema<IMosqueMember>({
   },
   role: {
     type: String,
-    enum: ['admin', 'treasurer', 'imam', 'member'],
+    enum: ['admin', 'member'],
     required: [true, 'Role is required'],
   },
   joinedAt: {

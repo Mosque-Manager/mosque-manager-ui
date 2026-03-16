@@ -137,11 +137,15 @@ eslint-config-next    # Next.js ESLint config
 
 | Role | Scope | Permissions |
 |------|-------|-------------|
-| **Super Admin** | Global | Create/manage mosques, assign mosque admins, view all data |
-| **Mosque Admin** | Per Mosque | Full CRUD on all data within their mosque |
-| **Treasurer** | Per Mosque | View/manage finances only (salary, expenses, donations, reports, balance) |
-| **Imam** | Per Mosque | View own salary and payment history only |
-| **Member** | Per Mosque | Read-only access to mosque dashboard |
+| **Super Admin** | Global | Full access to all mosques and data, system-level operations |
+| **Admin** | Per Mosque | Full CRUD on all data within their mosque, manage members |
+| **Member** | Per Mosque | Read-only access to mosque data |
+
+**Key Rules:**
+- Anyone can sign up and register **one mosque** → automatically becomes **Admin** of that mosque
+- A regular user can only register one mosque (Super Admin can create multiple)
+- Admin can add members (read-only) or promote them to Admin
+- Super Admin (first user in the system) can access and manage everything
 
 ### RBAC Implementation Strategy
 
@@ -202,7 +206,7 @@ Collection: mosquemembers
   _id:       ObjectId       (auto)
   mosqueId:  ObjectId       (ref: Mosques, required)
   userId:    ObjectId       (ref: Users, required)
-  role:      String         (enum: 'admin' | 'treasurer' | 'imam' | 'member', required)
+  role:      String         (enum: 'admin' | 'member', required)
   joinedAt:  Date           (default: now)
 }
 Indexes: { mosqueId: 1, userId: 1 } (unique compound)
@@ -721,7 +725,7 @@ Mosque admin can manage the list of people who contribute monthly to the mosque.
   - `src/components/shared/DataTable.tsx` — reusable table with pagination, sorting
 - [ ] **2.9** Create `ConfirmDialog` component:
   - `src/components/shared/ConfirmDialog.tsx` — "Are you sure?" modal for deletes
-- [ ] **2.10** Update sidebar navigation to include "Contributors" link (visible to admin + treasurer roles)
+- [ ] **2.10** Update sidebar navigation to include "Contributors" link (visible to admin role)
 - [ ] **2.11** Update spec files:
   - `src/lib/models/MODELS.md` — add Contributor model documentation
   - `src/lib/actions/ACTIONS.md` — add contributor CRUD action signatures and permissions
@@ -752,7 +756,8 @@ Mosque admin can manage the list of people who contribute monthly to the mosque.
 - [ ] Phone number is validated (10+ digits)
 - [ ] Monthly amount must be a positive number
 - [ ] Duplicate phone within same mosque shows warning
-- [ ] Sidebar shows "Contributors" for admin and treasurer roles
+- [ ] Sidebar shows "Contributors" for mosque admin role (hidden from super admin)
+- [ ] Super admin can click a mosque card to view its details and contributors
 
 ---
 

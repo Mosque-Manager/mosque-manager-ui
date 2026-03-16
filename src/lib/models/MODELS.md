@@ -49,7 +49,7 @@ Mongoose models defining the MongoDB schema for the Masjid Manager application. 
 - **Fields**:
   - `mosqueId` — ObjectId (ref: Mosque), required
   - `userId` — ObjectId (ref: User), required
-  - `role` — String, enum: `admin` | `treasurer` | `imam` | `member`, required
+  - `role` — String, enum: `admin` | `member`, required
   - `joinedAt` — Date, default: now
 - **Indexes**: `{ mosqueId: 1, userId: 1 }` (unique compound), `{ userId: 1 }`
 - **Type Export**: `MemberRole`
@@ -64,8 +64,33 @@ User (1) ──── (*) MosqueMember (*) ──── (1) Mosque
 - A Mosque can have multiple Users (via MosqueMember)
 - MosqueMember is the join table carrying the `role`
 
+## 4. Contributor (`src/lib/models/Contributor.ts`)
+
+### Fields
+| Field | Type | Required | Default | Notes |
+|-------|------|----------|---------|-------|
+| `mosqueId` | ObjectId (ref: Mosque) | Yes | — | Scoped to mosque |
+| `name` | String | Yes | — | Trimmed |
+| `phone` | String | Yes | — | For WhatsApp reminders |
+| `fixedMonthlyAmount` | Number | Yes | — | Min: 0 |
+| `address` | String | No | — | Trimmed |
+| `isActive` | Boolean | No | true | Soft delete flag |
+| `createdAt` | Date | Auto | — | |
+| `updatedAt` | Date | Auto | — | |
+
+### Indexes
+- `{ mosqueId: 1, isActive: 1 }` — list queries by mosque + status
+- `{ mosqueId: 1, phone: 1 }` — duplicate phone check
+
+### Relationships
+- Belongs to one Mosque
+- Referenced by Payments (R3)
+
+---
+
 ## Changelog
 
 | Date | Release | Change |
 |------|---------|--------|
+| 16 Mar 2026 | R2 | Added Contributor model |
 | 16 Mar 2026 | R1 | Initial creation — User, Mosque, MosqueMember models |

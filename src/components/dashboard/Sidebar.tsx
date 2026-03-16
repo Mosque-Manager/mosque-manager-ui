@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
   Building2,
+  Users,
   LogOut,
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
@@ -39,7 +40,13 @@ export default function Sidebar({ user, mobile = false }: SidebarProps) {
       label: 'Mosques',
       href: '/mosques',
       icon: <Building2 className="h-4 w-4" />,
-      show: user.isSuperAdmin,
+      show: true,
+    },
+    {
+      label: 'Contributors',
+      href: '/contributors',
+      icon: <Users className="h-4 w-4" />,
+      show: !user.isSuperAdmin && user.role === 'admin',
     },
   ];
 
