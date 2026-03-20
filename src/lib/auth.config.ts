@@ -28,7 +28,7 @@ export const authConfig: NextAuthConfig = {
 
       return isLoggedIn;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         const u = user as SessionUser & { id: string };
         token.id = u.id;
@@ -36,6 +36,11 @@ export const authConfig: NextAuthConfig = {
         token.mosqueId = u.mosqueId;
         token.role = u.role;
         token.lang = u.lang;
+      }
+      // When update() is called from client, patch the token
+      if (trigger === 'update' && session) {
+        if (session.mosqueId) token.mosqueId = session.mosqueId;
+        if (session.role) token.role = session.role;
       }
       return token;
     },

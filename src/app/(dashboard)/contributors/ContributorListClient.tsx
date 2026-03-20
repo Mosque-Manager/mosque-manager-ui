@@ -19,7 +19,11 @@ import type { ContributorData } from '@/types';
 
 type StatusFilter = 'active' | 'inactive' | 'all';
 
-export default function ContributorListClient() {
+interface ContributorListClientProps {
+  isReadOnly?: boolean;
+}
+
+export default function ContributorListClient({ isReadOnly = false }: ContributorListClientProps) {
   const router = useRouter();
   const [data, setData] = useState<ContributorListResult | null>(null);
   const [search, setSearch] = useState('');
@@ -85,21 +89,25 @@ export default function ContributorListClient() {
           >
             <Eye className="h-4 w-4" />
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => router.push(`/contributors/${item._id}/edit`)}
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-          {item.isActive && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setDeleteId(item._id)}
-            >
-              <Trash2 className="h-4 w-4 text-destructive" />
-            </Button>
+          {!isReadOnly && (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => router.push(`/contributors/${item._id}/edit`)}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+              {item.isActive && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setDeleteId(item._id)}
+                >
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              )}
+            </>
           )}
         </div>
       ),
@@ -116,7 +124,7 @@ export default function ContributorListClient() {
           </p>
         </div>
         <Link href="/contributors/new">
-          <Button>
+          <Button className={isReadOnly ? 'hidden' : ''}>
             <Plus className="mr-2 h-4 w-4" />
             Add Contributor
           </Button>

@@ -29,7 +29,8 @@ interface ContributorDetailPageProps {
 export default async function ContributorDetailPage({
   params,
 }: ContributorDetailPageProps) {
-  await requireRole(['admin', 'member']);
+  const user = await requireRole(['admin', 'member']);
+  const isReadOnly = user.role === 'member';
 
   const contributor = await getContributor(params.id);
   if (!contributor) {
@@ -64,12 +65,14 @@ export default async function ContributorDetailPage({
             {contributor.name}
           </h1>
         </div>
-        <Link href={`/contributors/${contributor._id}/edit`}>
-          <Button>
-            <Pencil className="mr-2 h-4 w-4" />
-            Edit
-          </Button>
-        </Link>
+        {!isReadOnly && (
+          <Link href={`/contributors/${contributor._id}/edit`}>
+            <Button>
+              <Pencil className="mr-2 h-4 w-4" />
+              Edit
+            </Button>
+          </Link>
+        )}
       </div>
 
       <Card>

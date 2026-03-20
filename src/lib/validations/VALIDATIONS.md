@@ -1,7 +1,7 @@
 # Validations Spec
 
 > Last Updated: 20 March 2026
-> Release: R1–R3
+> Release: R1–R3, R8
 
 ## Overview
 Zod schemas for validating user input on both client and server side. Each schema mirrors the corresponding Mongoose model fields and is used by Server Actions.
@@ -14,6 +14,7 @@ Zod schemas for validating user input on both client and server side. Each schem
 | `mosque.ts` | Mosque creation form validation | R1 |
 | `contributor.ts` | Contributor form validation | R2 |
 | `payment.ts` | Payment recording validation | R3 |
+| `member.ts` | Invite role validation | R8 |
 
 ## Contracts
 
@@ -71,10 +72,21 @@ Zod schemas for validating user input on both client and server side. Each schem
 - **Type Export**: `PaymentFormData`
 - **Used By**: `actions/payment.ts`, `PaymentsClient.tsx`
 
+---
+
+## File: `validations/member.ts`
+
+### `inviteSchema`
+- **Fields**:
+  - `role` — enum: admin, member (default: member)
+- **Type Export**: `InviteInput`
+- **Used By**: `actions/member.ts` → `createInviteLink()`
+
 ## Changelog
 
 | Date | Release | Change |
 |------|---------|--------|
+| 20 Mar 2026 | R8 | Added inviteSchema in member.ts |
 | 16 Mar 2026 | R3 | Added paymentSchema |
 | 16 Mar 2026 | R2 | Added contributorSchema |
 | 16 Mar 2026 | R1 | Initial creation — signUpSchema, loginSchema, createMosqueSchema |

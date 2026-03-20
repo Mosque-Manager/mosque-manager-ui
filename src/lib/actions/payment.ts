@@ -37,7 +37,7 @@ export async function getMonthlyPayments(
   month: number,
   year: number
 ): Promise<MonthlyPaymentRow[]> {
-  const user = await requireRole(['admin']);
+  const user = await requireRole(['admin', 'member']);
   const mosqueId = getMosqueId(user);
 
   await dbConnect();
@@ -78,7 +78,7 @@ export async function getPaymentSummary(
   month: number,
   year: number
 ): Promise<PaymentSummary> {
-  const user = await requireRole(['admin']);
+  const user = await requireRole(['admin', 'member']);
   const mosqueId = getMosqueId(user);
 
   await dbConnect();

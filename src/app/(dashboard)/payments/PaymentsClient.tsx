@@ -56,11 +56,13 @@ const MONTH_NAMES = [
 interface PaymentsClientProps {
   initialMonth: number;
   initialYear: number;
+  isReadOnly?: boolean;
 }
 
 export default function PaymentsClient({
   initialMonth,
   initialYear,
+  isReadOnly = false,
 }: PaymentsClientProps) {
   const [month, setMonth] = useState(initialMonth);
   const [year, setYear] = useState(initialYear);
@@ -159,11 +161,13 @@ export default function PaymentsClient({
             Track monthly contributor payments
           </p>
         </div>
-        <Link href="/payments/reminders">
-          <Button variant="outline" size="sm">
-            Send Reminders
-          </Button>
-        </Link>
+        {!isReadOnly && (
+          <Link href="/payments/reminders">
+            <Button variant="outline" size="sm">
+              Send Reminders
+            </Button>
+          </Link>
+        )}
       </div>
 
       {/* Month/Year Selector */}
@@ -227,7 +231,7 @@ export default function PaymentsClient({
                 <TableHead className="hidden sm:table-cell">Phone</TableHead>
                 <TableHead className="text-right">Amount Due</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="text-right">Action</TableHead>
+                {!isReadOnly && <TableHead className="text-right">Action</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -255,31 +259,33 @@ export default function PaymentsClient({
                       </Badge>
                     )}
                   </TableCell>
-                  <TableCell className="text-right">
-                    {row.payment ? (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleUndo(row.payment!._id)}
-                      >
-                        <Undo2 className="mr-1 h-3 w-3" />
-                        Undo
-                      </Button>
-                    ) : (
-                      <Button
-                        size="sm"
-                        onClick={() =>
-                          openPaymentDialog(
-                            row.contributor._id,
-                            row.contributor.name,
-                            row.contributor.fixedMonthlyAmount
-                          )
-                        }
-                      >
-                        Mark Paid
-                      </Button>
-                    )}
-                  </TableCell>
+                  {!isReadOnly && (
+                    <TableCell className="text-right">
+                      {row.payment ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleUndo(row.payment!._id)}
+                        >
+                          <Undo2 className="mr-1 h-3 w-3" />
+                          Undo
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          onClick={() =>
+                            openPaymentDialog(
+                              row.contributor._id,
+                              row.contributor.name,
+                              row.contributor.fixedMonthlyAmount
+                            )
+                          }
+                        >
+                          Mark Paid
+                        </Button>
+                      )}
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>

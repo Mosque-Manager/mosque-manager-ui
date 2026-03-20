@@ -8,6 +8,7 @@ import {
   Users,
   CreditCard,
   LogOut,
+  UsersRound,
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { cn } from '@/lib/utils';
@@ -45,20 +46,26 @@ export default function Sidebar({ user, mobile = false, unpaidCount = 0, onNavig
       label: 'Mosques',
       href: '/mosques',
       icon: <Building2 className="h-4 w-4" />,
-      show: true,
+      show: user.isSuperAdmin || user.role === 'admin',
     },
     {
       label: 'Contributors',
       href: '/contributors',
       icon: <Users className="h-4 w-4" />,
-      show: !user.isSuperAdmin && user.role === 'admin',
+      show: !user.isSuperAdmin && (user.role === 'admin' || user.role === 'member'),
     },
     {
       label: 'Payments',
       href: '/payments',
       icon: <CreditCard className="h-4 w-4" />,
+      show: !user.isSuperAdmin && (user.role === 'admin' || user.role === 'member'),
+      badge: unpaidCount > 0 && user.role === 'admin' ? unpaidCount : undefined,
+    },
+    {
+      label: 'Members',
+      href: '/members',
+      icon: <UsersRound className="h-4 w-4" />,
       show: !user.isSuperAdmin && user.role === 'admin',
-      badge: unpaidCount > 0 ? unpaidCount : undefined,
     },
   ];
 

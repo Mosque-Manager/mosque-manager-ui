@@ -37,7 +37,7 @@ export interface ContributorListResult {
 export async function getContributors(
   filters: ContributorFilters = {}
 ): Promise<ContributorListResult> {
-  const user = await requireRole(['admin']);
+  const user = await requireRole(['admin', 'member']);
   const mosqueId = getMosqueId(user);
 
   await dbConnect();

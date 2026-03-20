@@ -20,6 +20,7 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const registered = searchParams.get('registered');
+  const invite = searchParams.get('invite');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -42,6 +43,11 @@ function LoginForm() {
       setError('Invalid email or password');
       setLoading(false);
     } else {
+      // If there's an invite token from URL, store it in localStorage
+      // InviteHandler in the dashboard will pick it up and accept it
+      if (invite && typeof window !== 'undefined') {
+        localStorage.setItem('pending-invite', invite);
+      }
       router.push('/');
       router.refresh();
     }
@@ -99,7 +105,7 @@ function LoginForm() {
       <CardFooter className="justify-center">
         <p className="text-sm text-muted-foreground">
           Don&apos;t have an account?{' '}
-          <Link href="/signup" className="text-primary hover:underline">
+          <Link href={invite ? `/signup?invite=${invite}` : '/signup'} className="text-primary hover:underline">
             Sign up
           </Link>
         </p>

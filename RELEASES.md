@@ -1173,51 +1173,51 @@ Cumulative Balance = Sum of all Monthly Balances since mosque creation
 |-------|-------|
 | **Depends On** | Release 1, Release 4.5 |
 | **Can Parallel With** | Releases 5-7 |
-| **Status** | 🔲 Not Started |
+| **Status** | ✅ Complete |
 
 ### Goal
 Allow mosque admins to invite users via WhatsApp invite link. Invited users sign up, get linked to the mosque as read-only members, and can only see that mosque's data.
 
 ### Tasks
 
-- [ ] **8.1** Create invite link generation:
+- [x] **8.1** Create invite link generation:
   - Admin clicks "Invite Member" → generates a unique invite link with a token
   - Link format: `https://<domain>/invite/<token>`
   - Token stored in DB with mosqueId, role (default: member), expiry (7 days), used flag
   - Admin shares the link via WhatsApp (wa.me pre-filled message with the invite link)
-- [ ] **8.2** Create Mongoose model:
+- [x] **8.2** Create Mongoose model:
   - `src/lib/models/Invite.ts` — mosqueId, token (unique), role, expiresAt, usedBy, usedAt, createdBy
-- [ ] **8.3** Create invite landing page:
-  - `src/app/(auth)/invite/[token]/page.tsx`
+- [x] **8.3** Create invite landing page:
+  - `src/app/invite/[token]/page.tsx`
   - Shows mosque name: "You're invited to join [Mosque Name]"
   - If user is logged in: auto-link to mosque, redirect to dashboard
   - If user is not logged in: shows signup form, after signup auto-links to mosque
-- [ ] **8.4** Create server actions in `src/lib/actions/member.ts`:
+- [x] **8.4** Create server actions in `src/lib/actions/member.ts`:
   - `createInviteLink(role?)` — generates token, stores in DB, returns full URL
   - `getInviteDetails(token)` — validates token (not expired, not used), returns mosque info
   - `acceptInvite(token)` — links current user to mosque as member
   - `getMembers()` — list all members of admin's mosque
   - `removeMember(userId)` — remove member from mosque (admin only)
-- [ ] **8.5** Create Zod validation:
+- [x] **8.5** Create Zod validation:
   - `src/lib/validations/member.ts` — `inviteSchema` (role validation)
-- [ ] **8.6** Create member management page:
+- [x] **8.6** Create member management page:
   - `src/app/(dashboard)/members/page.tsx`
   - Member list: Name, Email, Phone, Role, Joined Date, Actions (remove)
   - "Invite Member" button → generates link → shows share-via-WhatsApp button
-- [ ] **8.7** Create invite page for admin:
+- [x] **8.7** Create invite page for admin:
   - `src/app/(dashboard)/members/invite/page.tsx`
   - Role selector (member or admin)
   - Generate link button → displays link + "Share via WhatsApp" button
   - Shows list of pending/used invites
-- [ ] **8.8** Enforce read-only access for members:
+- [x] **8.8** Enforce read-only access for members:
   - All `createX`, `updateX`, `deleteX` actions must check `requireRole(['admin'])`
   - Hide action buttons (Add, Edit, Delete) in UI when `user.role === 'member'`
   - Members see: Dashboard (read-only stats), Payments (view only), Contributors (view only)
   - Members do NOT see: Add/Edit/Delete buttons, Reminders, Settings
-- [ ] **8.9** Update sidebar navigation for member role:
+- [x] **8.9** Update sidebar navigation for member role:
   - Admin: Dashboard, Mosques, Contributors, Payments, Members
   - Member: Dashboard, Contributors (read-only), Payments (read-only)
-- [ ] **8.10** Update spec files:
+- [x] **8.10** Update spec files:
   - `src/lib/models/MODELS.md` — add Invite model
   - `src/lib/actions/ACTIONS.md` — add member/invite actions
   - `src/lib/validations/VALIDATIONS.md` — add member validation
@@ -1228,27 +1228,41 @@ Allow mosque admins to invite users via WhatsApp invite link. Invited users sign
 | `src/lib/models/Invite.ts` | Create |
 | `src/lib/validations/member.ts` | Create |
 | `src/lib/actions/member.ts` | Create |
-| `src/app/(auth)/invite/[token]/page.tsx` | Create |
+| `src/app/invite/[token]/page.tsx` | Create |
+| `src/app/invite/[token]/InviteClient.tsx` | Create |
 | `src/app/(dashboard)/members/page.tsx` | Create |
+| `src/app/(dashboard)/members/MembersClient.tsx` | Create |
 | `src/app/(dashboard)/members/invite/page.tsx` | Create |
-| `src/components/dashboard/Sidebar.tsx` | Modify (role-based nav for member) |
-| `src/app/(dashboard)/contributors/page.tsx` | Modify (hide actions for member) |
+| `src/app/(dashboard)/members/invite/InviteClient.tsx` | Create |
+| `src/components/shared/InviteHandler.tsx` | Create |
+| `src/components/dashboard/Sidebar.tsx` | Modify (role-based nav for member + Members link) |
+| `src/app/(dashboard)/contributors/page.tsx` | Modify (allow member, pass isReadOnly) |
+| `src/app/(dashboard)/contributors/ContributorListClient.tsx` | Modify (hide actions for member) |
+| `src/app/(dashboard)/contributors/[id]/page.tsx` | Modify (hide Edit for member) |
+| `src/app/(dashboard)/payments/page.tsx` | Modify (allow member, pass isReadOnly) |
 | `src/app/(dashboard)/payments/PaymentsClient.tsx` | Modify (hide actions for member) |
+| `src/lib/actions/mosque.ts` | Modify (fix membership check — any role blocks creation) |
+| `src/lib/actions/contributor.ts` | Modify (getContributors allows member) |
+| `src/lib/actions/payment.ts` | Modify (read actions allow member) |
+| `src/app/(auth)/signup/page.tsx` | Modify (invite param passthrough) |
+| `src/app/(auth)/login/page.tsx` | Modify (invite param + redirect) |
+| `src/app/(dashboard)/layout.tsx` | Modify (add InviteHandler) |
+| `src/middleware.ts` | Modify (exclude /invite/ from auth) |
 | `src/lib/models/MODELS.md` | Update |
 | `src/lib/actions/ACTIONS.md` | Update |
 | `src/lib/validations/VALIDATIONS.md` | Update |
 
 ### Acceptance Criteria
-- [ ] Admin can generate an invite link with a specific role
-- [ ] Admin can share invite link via WhatsApp (pre-filled message with link)
-- [ ] Invite link shows mosque name and prompts signup or auto-links logged-in user
-- [ ] Invited user sees only the mosque they were invited to
-- [ ] Members see dashboard, contributors, and payments in read-only mode
-- [ ] Members cannot see Add/Edit/Delete buttons or access create/update/delete actions
-- [ ] Invite links expire after 7 days
-- [ ] Used invite links cannot be reused
-- [ ] Admin can view list of members and remove them
-- [ ] Sidebar navigation differs for admin vs member role
+- [x] Admin can generate an invite link with a specific role
+- [x] Admin can share invite link via WhatsApp (pre-filled message with link)
+- [x] Invite link shows mosque name and prompts signup or auto-links logged-in user
+- [x] Invited user sees only the mosque they were invited to
+- [x] Members see dashboard, contributors, and payments in read-only mode
+- [x] Members cannot see Add/Edit/Delete buttons or access create/update/delete actions
+- [x] Invite links expire after 7 days
+- [x] Used invite links cannot be reused
+- [x] Admin can view list of members and remove them
+- [x] Sidebar navigation differs for admin vs member role
 
 ---
 

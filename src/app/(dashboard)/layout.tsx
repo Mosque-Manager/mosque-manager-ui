@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import DashboardShell from '@/components/dashboard/DashboardShell';
+import InviteHandler from '@/components/shared/InviteHandler';
 import { getUnpaidCount } from '@/lib/actions/payment';
 import type { SessionUser } from '@/types';
 
@@ -27,5 +28,10 @@ export default async function DashboardLayout({
     }
   }
 
-  return <DashboardShell user={user} unpaidCount={unpaidCount}>{children}</DashboardShell>;
+  return (
+    <>
+      <InviteHandler />
+      <DashboardShell user={user} unpaidCount={unpaidCount}>{children}</DashboardShell>
+    </>
+  );
 }

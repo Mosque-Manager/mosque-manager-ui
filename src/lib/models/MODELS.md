@@ -1,7 +1,7 @@
 # Models Spec
 
 > Last Updated: 20 March 2026
-> Release: R1–R3
+> Release: R1–R3, R8
 
 ## Overview
 Mongoose models defining the MongoDB schema for the Masjid Manager application. All models use timestamps and enforce data integrity via indexes and validation.
@@ -15,6 +15,7 @@ Mongoose models defining the MongoDB schema for the Masjid Manager application. 
 | `MosqueMember.ts` | User-Mosque relationship with role | R1 |
 | `Contributor.ts` | Mosque contributor with monthly amount | R2 |
 | `Payment.ts` | Contributor monthly payment records | R3 |
+| `Invite.ts` | Invite links for member onboarding | R8 |
 
 ## Contracts
 
@@ -117,10 +118,36 @@ User (1) ──── (*) MosqueMember (*) ──── (1) Mosque
 
 ---
 
+## 6. Invite (`src/lib/models/Invite.ts`)
+
+| Field | Type | Required | Default | Notes |
+|-------|------|----------|---------|-------|
+| `mosqueId` | ObjectId (ref: Mosque) | Yes | — | Mosque being invited to |
+| `token` | String | Yes | — | Unique, crypto random (32 bytes hex) |
+| `role` | String (enum: admin, member) | No | member | Role assigned on acceptance |
+| `expiresAt` | Date | Yes | — | 7 days from creation |
+| `usedBy` | ObjectId (ref: User) | No | — | Set when invite is accepted |
+| `usedAt` | Date | No | — | Set when invite is accepted |
+| `createdBy` | ObjectId (ref: User) | Yes | — | Admin who created the invite |
+| `createdAt` | Date | — | auto | Mongoose timestamps |
+
+### Indexes
+- `{ token: 1 }` (unique) — invite lookup by token
+- `{ mosqueId: 1 }` — invite history per mosque
+- `{ expiresAt: 1 }` — TTL or manual cleanup
+
+### Relationships
+- Belongs to one Mosque
+- Created by one User
+- Used by one User (optional)
+
+---
+
 ## Changelog
 
 | Date | Release | Change |
 |------|---------|--------|
+| 20 Mar 2026 | R8 | Added Invite model |
 | 16 Mar 2026 | R3 | Added Payment model |
 | 16 Mar 2026 | R2 | Added Contributor model |
 | 16 Mar 2026 | R1 | Initial creation — User, Mosque, MosqueMember models |

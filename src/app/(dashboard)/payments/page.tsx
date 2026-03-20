@@ -2,7 +2,8 @@ import { requireRole } from '@/lib/rbac';
 import PaymentsClient from './PaymentsClient';
 
 export default async function PaymentsPage() {
-  await requireRole(['admin']);
+  const user = await requireRole(['admin', 'member']);
+  const isReadOnly = user.role === 'member';
 
   const now = new Date();
 
@@ -10,6 +11,7 @@ export default async function PaymentsPage() {
     <PaymentsClient
       initialMonth={now.getMonth() + 1}
       initialYear={now.getFullYear()}
+      isReadOnly={isReadOnly}
     />
   );
 }

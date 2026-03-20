@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { Suspense } from 'react';
 import { signUp } from '@/lib/actions/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,8 +17,10 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 
-export default function SignUpPage() {
+function SignUpForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const invite = searchParams.get('invite');
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [loading, setLoading] = useState(false);
@@ -30,7 +33,8 @@ export default function SignUpPage() {
     const result = await signUp(formData);
 
     if (result.success) {
-      router.push('/login?registered=true');
+      const loginUrl = invite ? `/login?registered=true&invite=${invite}` : '/login?registered=true';
+      router.push(loginUrl);
     } else {
       setError(result.message);
       if (result.errors) {
@@ -120,11 +124,19 @@ export default function SignUpPage() {
       <CardFooter className="justify-center">
         <p className="text-sm text-muted-foreground">
           Already have an account?{' '}
-          <Link href="/login" className="text-primary hover:underline">
+          <Link href={invite ? `/login?invite=${invite}` : '/login'} className="text-primary hover:underline">
             Log in
           </Link>
         </p>
       </CardFooter>
     </Card>
+  );
+}
+
+export default function SignUpPage() {
+  return (
+    <Suspense>
+      <SignUpForm />
+    </Suspense>
   );
 }

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import InstallPrompt from "@/components/shared/InstallPrompt";
+import Providers from "@/components/shared/Providers";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -34,8 +35,10 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
       </head>
       <body className={`${inter.className} antialiased`}>
-        <InstallPrompt />
-        {children}
+        <Providers>
+          <InstallPrompt />
+          {children}
+        </Providers>
         <script
           dangerouslySetInnerHTML={{
             __html: `

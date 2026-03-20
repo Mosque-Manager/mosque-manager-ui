@@ -1,7 +1,7 @@
 # Actions Spec
 
 > Last Updated: 20 March 2026
-> Release: R1–R4
+> Release: R1–R4, R8
 
 ## Overview
 Server Actions handling business logic for the Masjid Manager application. All actions are marked with `'use server'` and validate inputs via Zod schemas before processing.
@@ -14,6 +14,7 @@ Server Actions handling business logic for the Masjid Manager application. All a
 | `mosque.ts` | Mosque CRUD + queries | R1 |
 | `contributor.ts` | Contributor CRUD | R2 |
 | `payment.ts` | Payment recording, queries, unpaid tracking | R3, R4 |
+| `member.ts` | Invite link generation, acceptance, member management | R8 |
 
 ## Contracts
 
@@ -197,10 +198,58 @@ Server Actions handling business logic for the Masjid Manager application. All a
 - **Input**: `month: number` (1-12), `lang: 'en' | 'hi' | 'ur'`
 - **Output**: `string` — Localized month name
 
+---
+
+### `createInviteLink(role?)` — `member.ts`
+- **Purpose**: Generate a unique invite link for a mosque
+- **Input**: `role: 'admin' | 'member'` (default: `'member'`)
+- **Output**: `ActionResponse<{ url: string; token: string }>`
+- **Validation**: `inviteSchema` from `validations/member.ts`
+- **Depends On**: `Invite` model
+- **Permissions**: Admin only
+- **Logic**: Generates crypto random token, stores in DB with 7-day expiry
+
+### `getInviteDetails(token)` — `member.ts`
+- **Purpose**: Validate and get details of an invite link
+- **Input**: `token: string`
+- **Output**: `ActionResponse<InviteDetails>` — mosqueame, role, expired, used
+- **Depends On**: `Invite`, `Mosque` models
+- **Permissions**: Public (no auth required)
+
+### `acceptInvite(token)` — `member.ts`
+- **Purpose**: Accept an invite and join the mosque
+- **Input**: `token: string`
+- **Output**: `ActionResponse`
+- **Depends On**: `Invite`, `MosqueMember` models
+- **Permissions**: Any authenticated user
+- **Logic**: Validates token not expired/used, creates MosqueMember, marks invite used
+
+### `getMembers()` — `member.ts`
+- **Purpose**: List all members of the admin's mosque
+- **Output**: `MemberData[]` — name, email, phone, role, joinedAt
+- **Depends On**: `MosqueMember`, `User` models
+- **Permissions**: Admin only
+
+### `removeMember(userId)` — `member.ts`
+- **Purpose**: Remove a member from the mosque
+- **Input**: `userId: string`
+- **Output**: `ActionResponse`
+- **Depends On**: `MosqueMember` model
+- **Permissions**: Admin only
+- **Logic**: Cannot remove self, cannot remove other admins (unless super admin)
+
+### `getInviteHistory()` — `member.ts`
+- **Purpose**: Get recent invite history for the mosque
+- **Output**: `InviteHistoryItem[]` — last 20 invites with status
+- **Depends On**: `Invite`, `User` models
+- **Permissions**: Admin only
+
 ## Changelog
 
 | Date | Release | Change |
 |------|---------|--------|
+| 20 Mar 2026 | R8 | Added member.ts — invite link generation, acceptance, member management |
+| 20 Mar 2026 | R8 | Updated getContributors, getMonthlyPayments, getPaymentSummary to allow member role |
 | 16 Mar 2026 | R4 | Added getUnpaidContributors, getUnpaidCount, cron endpoint, WhatsApp utils |
 | 16 Mar 2026 | R3 | Added payment CRUD actions (record, remove, queries, dashboard summary) |
 | 16 Mar 2026 | R2 | Added getMosque, getMosqueContributors actions; Contributors hidden from super admin sidebar |

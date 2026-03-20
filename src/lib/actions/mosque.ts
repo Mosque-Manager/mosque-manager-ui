@@ -16,15 +16,15 @@ export async function createMosque(
   await dbConnect();
 
   // Non-super-admin users can only create one mosque
+  // Any existing membership (admin OR member) blocks creation
   if (!user.isSuperAdmin) {
     const existingMembership = await MosqueMember.findOne({
       userId: user.id,
-      role: 'admin',
     });
     if (existingMembership) {
       return {
         success: false,
-        message: 'You have already registered a mosque. Each user can register only one mosque.',
+        message: 'You are already associated with a mosque. Each user can belong to only one mosque.',
       };
     }
   }

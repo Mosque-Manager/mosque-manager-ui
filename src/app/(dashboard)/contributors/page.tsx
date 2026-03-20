@@ -2,7 +2,8 @@ import { requireRole } from '@/lib/rbac';
 import ContributorListClient from './ContributorListClient';
 
 export default async function ContributorsPage() {
-  await requireRole(['admin']);
+  const user = await requireRole(['admin', 'member']);
+  const isReadOnly = user.role === 'member';
 
-  return <ContributorListClient />;
+  return <ContributorListClient isReadOnly={isReadOnly} />;
 }
