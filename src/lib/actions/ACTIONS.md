@@ -1,7 +1,7 @@
 # Actions Spec
 
-> Last Updated: 16 March 2026
-> Release: R1–R3
+> Last Updated: 20 March 2026
+> Release: R1–R4
 
 ## Overview
 Server Actions handling business logic for the Masjid Manager application. All actions are marked with `'use server'` and validate inputs via Zod schemas before processing.
@@ -13,7 +13,7 @@ Server Actions handling business logic for the Masjid Manager application. All a
 | `auth.ts` | User registration | R1 |
 | `mosque.ts` | Mosque CRUD + queries | R1 |
 | `contributor.ts` | Contributor CRUD | R2 |
-| `payment.ts` | Payment recording and queries | R3 |
+| `payment.ts` | Payment recording, queries, unpaid tracking | R3, R4 |
 
 ## Contracts
 

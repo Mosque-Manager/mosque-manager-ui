@@ -2,7 +2,7 @@
 
 > **Project**: Masjid Manager  
 > **Start Date**: 16 March 2026  
-> **Status**: Planning Complete — Ready for Implementation  
+> **Status**: R1–R4 Complete, PWA Done, Deployed to Vercel  
 > **Repository**: `/mosque`  
 > **Cost**: $0 (all free-tier services)
 
@@ -19,18 +19,19 @@
 7. [Release 2 — Contributor Management](#release-2--contributor-management)
 8. [Release 3 — Monthly Payment Tracking](#release-3--monthly-payment-tracking)
 9. [Release 4 — WhatsApp Reminders](#release-4--whatsapp-reminders)
-10. [Release 5 — Imam Salary Management](#release-5--imam-salary-management)
-11. [Release 6 — Expenses & Donations](#release-6--expenses--donations)
-12. [Release 7 — Balance Dashboard](#release-7--balance-dashboard)
-13. [Release 8 — Member Directory & Roles](#release-8--member-directory--roles)
-14. [Release 9 — Events & Announcements](#release-9--events--announcements)
-15. [Release 10 — PDF Reports](#release-10--pdf-reports)
-16. [Release 11 — Multi-Language (i18n)](#release-11--multi-language-i18n)
-17. [Release 12 — Polish & Deploy](#release-12--polish--deploy)
-18. [Release Dependency Graph](#release-dependency-graph)
-19. [Architecture Decisions](#architecture-decisions)
-20. [Environment Variables](#environment-variables)
-21. [Future Enhancements](#future-enhancements)
+10. [Release 4.5 — PWA & Deployment](#release-45--pwa--deployment)
+11. [Release 5 — Imam Salary Management](#release-5--imam-salary-management)
+12. [Release 6 — Expenses & Donations](#release-6--expenses--donations)
+13. [Release 7 — Balance Dashboard](#release-7--balance-dashboard)
+14. [Release 8 — Member Invite & Read-Only Access](#release-8--member-invite--read-only-access)
+15. [Release 9 — Events & Announcements](#release-9--events--announcements)
+16. [Release 10 — PDF Reports](#release-10--pdf-reports)
+17. [Release 11 — Multi-Language (i18n)](#release-11--multi-language-i18n)
+18. [Release 12 — Polish & Deploy](#release-12--polish--deploy)
+19. [Release Dependency Graph](#release-dependency-graph)
+20. [Architecture Decisions](#architecture-decisions)
+21. [Environment Variables](#environment-variables)
+22. [Future Enhancements](#future-enhancements)
 
 ---
 
@@ -348,6 +349,26 @@ Collection: events
 Indexes: { mosqueId: 1, date: -1 }
 ```
 
+### 11. Invites (R8)
+
+```
+Collection: invites
+{
+  _id:        ObjectId       (auto)
+  mosqueId:   ObjectId       (ref: Mosques, required)
+  token:      String         (required, unique — crypto random)
+  role:       String         (enum: 'admin' | 'member', default: 'member')
+  expiresAt:  Date           (required — 7 days from creation)
+  usedBy:     ObjectId       (ref: Users, optional — set when used)
+  usedAt:     Date           (optional — set when used)
+  createdBy:  ObjectId       (ref: Users, required)
+  createdAt:  Date           (auto)
+}
+Indexes: { token: 1 } (unique)
+         { mosqueId: 1 }
+         { expiresAt: 1 } (TTL or manual cleanup)
+```
+
 ---
 
 ## Module Spec Documentation Convention
@@ -441,6 +462,11 @@ mosque/
 ├── package.json
 │
 ├── public/
+│   ├── manifest.json                    ← PWA web manifest [R4.5]
+│   ├── sw.js                            ← Service worker [R4.5]
+│   ├── icons/
+│   │   ├── icon-192.png                 ← PWA icon 192x192 [R4.5]
+│   │   └── icon-512.png                 ← PWA icon 512x512 [R4.5]
 │   └── logo.svg
 │
 └── src/
@@ -563,6 +589,7 @@ mosque/
     │   │   ├── SummaryCard.tsx
     │   │   └── PaymentGrid.tsx
     │   └── shared/
+    │       ├── InstallPrompt.tsx         ← PWA install popup [R4.5]
     │       ├── LanguageSwitcher.tsx
     │       ├── DataTable.tsx
     │       ├── ConfirmDialog.tsx
@@ -586,7 +613,7 @@ mosque/
 | Field | Value |
 |-------|-------|
 | **Depends On** | None (first release) |
-| **Status** | 🔲 Not Started |
+| **Status** | ✅ Complete (16 Mar 2026) |
 
 ### Goal
 A working app where users can sign up, log in, register a mosque (one per user), and see a role-aware dashboard.
@@ -697,7 +724,7 @@ A working app where users can sign up, log in, register a mosque (one per user),
 | Field | Value |
 |-------|-------|
 | **Depends On** | Release 1 |
-| **Status** | 🔲 Not Started |
+| **Status** | ✅ Complete (16 Mar 2026) |
 
 ### Goal
 Mosque admin can manage the list of people who contribute monthly to the mosque.
@@ -776,7 +803,7 @@ Mosque admin can manage the list of people who contribute monthly to the mosque.
 | Field | Value |
 |-------|-------|
 | **Depends On** | Release 2 |
-| **Status** | 🔲 Not Started |
+| **Status** | ✅ Complete (16 Mar 2026) |
 
 ### Goal
 Track which contributors have paid their monthly dues — the core functionality.
@@ -847,7 +874,7 @@ Track which contributors have paid their monthly dues — the core functionality
 | Field | Value |
 |-------|-------|
 | **Depends On** | Release 3 |
-| **Status** | 🔲 Not Started |
+| **Status** | ✅ Complete (16 Mar 2026) |
 
 ### Goal
 One-tap WhatsApp reminders for contributors who haven't paid yet.
@@ -893,6 +920,65 @@ One-tap WhatsApp reminders for contributors who haven't paid yet.
 - [ ] Message language matches admin's preference
 - [ ] Cron endpoint returns 200 and logs unpaid counts
 - [ ] Sidebar shows unpaid contributor count badge
+
+---
+
+## Release 4.5 — PWA & Deployment
+
+| Field | Value |
+|-------|-------|
+| **Depends On** | Release 4 |
+| **Status** | ✅ Complete (17 Mar 2026) |
+
+### Goal
+Make the app installable as a Progressive Web App on any phone (no app store) and deploy to production.
+
+### Tasks
+
+- [x] **4.5.1** Create PWA web manifest:
+  - `public/manifest.json` — app name, theme color (#16a34a), display: standalone, icons
+- [x] **4.5.2** Generate app icons:
+  - `public/icons/icon-192.png` — 192x192 green "M" icon
+  - `public/icons/icon-512.png` — 512x512 green "M" icon
+- [x] **4.5.3** Create service worker:
+  - `public/sw.js` — network-first caching strategy, caches login/signup pages
+- [x] **4.5.4** Update root layout with PWA meta tags:
+  - `src/app/layout.tsx` — manifest link, apple-touch-icon, theme-color viewport, service worker registration
+- [x] **4.5.5** Update middleware to exclude PWA files:
+  - `src/middleware.ts` — exclude `manifest.json`, `sw.js`, `icons/*`, `api/cron` from auth check
+- [x] **4.5.6** Create install prompt component:
+  - `src/components/shared/InstallPrompt.tsx` — intercepts `beforeinstallprompt` event (Android), shows iOS instructions
+  - Post-install: shows "Installed! Close this tab" message
+  - Returning visitors: shows "Open from home screen" green banner
+  - Already in standalone mode: shows nothing
+- [x] **4.5.7** Deploy to Vercel:
+  - Connected GitHub repo (Mosque-Manager/mosque-manager-ui) to Vercel
+  - Set env vars: MONGODB_URI (Atlas), NEXTAUTH_SECRET, CRON_SECRET
+  - Production URL: `https://mosque-manager-ui.vercel.app`
+- [x] **4.5.8** Set up MongoDB Atlas:
+  - Resumed ClusterTest cluster (AWS Mumbai, ap-south-1)
+  - Added 0.0.0.0/0 to IP access list for Vercel
+  - Database user: `saquraish2706` with atlasAdmin role
+
+### Files Created/Modified
+| File | Action |
+|------|--------|
+| `public/manifest.json` | Create |
+| `public/icons/icon-192.png` | Create |
+| `public/icons/icon-512.png` | Create |
+| `public/sw.js` | Create |
+| `src/app/layout.tsx` | Modify (PWA meta, service worker registration) |
+| `src/middleware.ts` | Modify (exclude PWA + cron routes) |
+| `src/components/shared/InstallPrompt.tsx` | Create |
+
+### Acceptance Criteria
+- [x] Opening URL on Android Chrome shows install popup
+- [x] Opening URL on iOS Safari shows instructions to add to home screen
+- [x] Installed app opens in standalone mode (no browser chrome)
+- [x] After install, banner guides user to close browser tab
+- [x] Returning visitors see "Open from home screen" banner
+- [x] App deploys to Vercel and connects to MongoDB Atlas
+- [x] manifest.json, sw.js, icons served without auth redirect
 
 ---
 
@@ -1081,67 +1167,88 @@ Cumulative Balance = Sum of all Monthly Balances since mosque creation
 
 ---
 
-## Release 8 — Member Directory & Roles
+## Release 8 — Member Invite & Read-Only Access
 
 | Field | Value |
 |-------|-------|
-| **Depends On** | Release 1 |
-| **Can Parallel With** | Releases 2-7 |
+| **Depends On** | Release 1, Release 4.5 |
+| **Can Parallel With** | Releases 5-7 |
 | **Status** | 🔲 Not Started |
 
 ### Goal
-Full multi-role, multi-tenant access control with member management.
+Allow mosque admins to invite users via WhatsApp invite link. Invited users sign up, get linked to the mosque as read-only members, and can only see that mosque's data.
 
 ### Tasks
 
-- [ ] **8.1** Create member management page:
+- [ ] **8.1** Create invite link generation:
+  - Admin clicks "Invite Member" → generates a unique invite link with a token
+  - Link format: `https://<domain>/invite/<token>`
+  - Token stored in DB with mosqueId, role (default: member), expiry (7 days), used flag
+  - Admin shares the link via WhatsApp (wa.me pre-filled message with the invite link)
+- [ ] **8.2** Create Mongoose model:
+  - `src/lib/models/Invite.ts` — mosqueId, token (unique), role, expiresAt, usedBy, usedAt, createdBy
+- [ ] **8.3** Create invite landing page:
+  - `src/app/(auth)/invite/[token]/page.tsx`
+  - Shows mosque name: "You're invited to join [Mosque Name]"
+  - If user is logged in: auto-link to mosque, redirect to dashboard
+  - If user is not logged in: shows signup form, after signup auto-links to mosque
+- [ ] **8.4** Create server actions in `src/lib/actions/member.ts`:
+  - `createInviteLink(role?)` — generates token, stores in DB, returns full URL
+  - `getInviteDetails(token)` — validates token (not expired, not used), returns mosque info
+  - `acceptInvite(token)` — links current user to mosque as member
+  - `getMembers()` — list all members of admin's mosque
+  - `removeMember(userId)` — remove member from mosque (admin only)
+- [ ] **8.5** Create Zod validation:
+  - `src/lib/validations/member.ts` — `inviteSchema` (role validation)
+- [ ] **8.6** Create member management page:
   - `src/app/(dashboard)/members/page.tsx`
-  - Member list: Name, Email, Phone, Role, Joined Date, Actions
-  - Filter by role
-  - Search by name/email
-- [ ] **8.2** Create invite member page:
+  - Member list: Name, Email, Phone, Role, Joined Date, Actions (remove)
+  - "Invite Member" button → generates link → shows share-via-WhatsApp button
+- [ ] **8.7** Create invite page for admin:
   - `src/app/(dashboard)/members/invite/page.tsx`
-  - Form: Email, Role (dropdown: admin, member)
-  - If user exists: add to mosque with role
-  - If user doesn't exist: create user account with temporary password, link to mosque
-- [ ] **8.3** Create server actions in `src/lib/actions/member.ts`:
-  - `getMembers(mosqueId)` — all members of a mosque
-  - `inviteMember(mosqueId, email, role)` — add existing or new user
-  - `changeRole(mosqueId, userId, newRole)` — update member's role
-  - `removeMember(mosqueId, userId)` — remove from mosque
-- [ ] **8.4** Implement role-based sidebar navigation:
-  - Super Admin: Mosques, Dashboard (platform-level stats)
-  - Admin: All sections within their mosque
-  - Member: Dashboard (read-only), Events
-- [ ] **8.5** Super admin features:
-  - `src/app/(dashboard)/mosques/page.tsx` — list all mosques with member counts, created date
-  - Ability to view any mosque's details and contributors
-- [ ] **8.6** Add "View-only" enforcement:
-  - Member role sees dashboard and events only
-  - All action buttons/forms hidden for member role
-- [ ] **8.7** Add member count to mosque list (super admin view)
-- [ ] **8.8** Update spec files:
-  - `src/lib/actions/ACTIONS.md` — add member management action signatures and permissions
+  - Role selector (member or admin)
+  - Generate link button → displays link + "Share via WhatsApp" button
+  - Shows list of pending/used invites
+- [ ] **8.8** Enforce read-only access for members:
+  - All `createX`, `updateX`, `deleteX` actions must check `requireRole(['admin'])`
+  - Hide action buttons (Add, Edit, Delete) in UI when `user.role === 'member'`
+  - Members see: Dashboard (read-only stats), Payments (view only), Contributors (view only)
+  - Members do NOT see: Add/Edit/Delete buttons, Reminders, Settings
+- [ ] **8.9** Update sidebar navigation for member role:
+  - Admin: Dashboard, Mosques, Contributors, Payments, Members
+  - Member: Dashboard, Contributors (read-only), Payments (read-only)
+- [ ] **8.10** Update spec files:
+  - `src/lib/models/MODELS.md` — add Invite model
+  - `src/lib/actions/ACTIONS.md` — add member/invite actions
+  - `src/lib/validations/VALIDATIONS.md` — add member validation
 
 ### Files Created/Modified
 | File | Action |
 |------|--------|
+| `src/lib/models/Invite.ts` | Create |
+| `src/lib/validations/member.ts` | Create |
 | `src/lib/actions/member.ts` | Create |
+| `src/app/(auth)/invite/[token]/page.tsx` | Create |
 | `src/app/(dashboard)/members/page.tsx` | Create |
 | `src/app/(dashboard)/members/invite/page.tsx` | Create |
-| `src/components/dashboard/Sidebar.tsx` | Major Modify (role-based nav) |
-| `src/app/(dashboard)/mosques/page.tsx` | Modify (member counts) |
-| `src/lib/rbac.ts` | Modify (view-only enforcement) |
-| `src/lib/actions/ACTIONS.md` | Update (add member actions) |
+| `src/components/dashboard/Sidebar.tsx` | Modify (role-based nav for member) |
+| `src/app/(dashboard)/contributors/page.tsx` | Modify (hide actions for member) |
+| `src/app/(dashboard)/payments/PaymentsClient.tsx` | Modify (hide actions for member) |
+| `src/lib/models/MODELS.md` | Update |
+| `src/lib/actions/ACTIONS.md` | Update |
+| `src/lib/validations/VALIDATIONS.md` | Update |
 
 ### Acceptance Criteria
-- [ ] Admin can invite a member by email with a specific role
-- [ ] Admin can change a member's role
-- [ ] Admin can remove a member from the mosque
-- [ ] Sidebar navigation reflects the user's role correctly
-- [ ] View-only members cannot see action buttons or forms
-- [ ] Super admin can view any mosque's details and contributors
-- [ ] Data is fully isolated between mosques (verified with 2+ mosques)
+- [ ] Admin can generate an invite link with a specific role
+- [ ] Admin can share invite link via WhatsApp (pre-filled message with link)
+- [ ] Invite link shows mosque name and prompts signup or auto-links logged-in user
+- [ ] Invited user sees only the mosque they were invited to
+- [ ] Members see dashboard, contributors, and payments in read-only mode
+- [ ] Members cannot see Add/Edit/Delete buttons or access create/update/delete actions
+- [ ] Invite links expire after 7 days
+- [ ] Used invite links cannot be reused
+- [ ] Admin can view list of members and remove them
+- [ ] Sidebar navigation differs for admin vs member role
 
 ---
 
@@ -1407,14 +1514,14 @@ Production-ready, deployed, and usable by real mosques.
 ## Release Dependency Graph
 
 ```
-R1 (Foundation & Auth)
-├── R2 (Contributors) → R3 (Payments) → R4 (WhatsApp Reminders)
+R1 (Foundation & Auth) ✅
+├── R2 (Contributors) ✅ → R3 (Payments) ✅ → R4 (WhatsApp Reminders) ✅ → R4.5 (PWA & Deploy) ✅
 │                                   ↘
 ├── R5 (Imam Salary) ───────────────→ R7 (Balance Dashboard) → R10 (PDF Reports)
 │                                   ↗
 ├── R6 (Expenses & Donations) ──────
 │
-├── R8 (Member Directory & Roles)
+├── R8 (Member Invite & Read-Only Access)
 │
 ├── R9 (Events & Announcements)
 │
@@ -1424,7 +1531,7 @@ R12 (Polish & Deploy) ← depends on all
 ```
 
 **Parallel tracks after R1:**
-- Track A: R2 → R3 → R4
+- Track A: R2 → R3 → R4 → R4.5 ✅ (all complete)
 - Track B: R5
 - Track C: R6
 - Track D: R8
@@ -1478,7 +1585,7 @@ CRON_SECRET=<random-string>  # Protect cron endpoint
 
 These are NOT part of the 12 releases but are potential future additions:
 
-1. **PWA (Progressive Web App)** — Add service worker, web manifest, offline caching so the app can be "installed" on any phone's home screen without app stores. Cost: $0. This is the recommended path for mobile distribution.
+1. ~~**PWA (Progressive Web App)**~~ — ✅ **Done in R4.5.** Service worker, web manifest, install prompt, standalone mode.
 2. **CSV/Excel Export** — Export any data table as CSV alongside PDF
 3. **Bulk "Mark All Paid"** — One-click to mark all contributors as paid
 4. **Google OAuth** — Login with Google as alternative to email/password
@@ -1491,5 +1598,5 @@ These are NOT part of the 12 releases but are potential future additions:
 
 ---
 
-*Document Last Updated: 16 March 2026*
+*Document Last Updated: 20 March 2026*
 *Maintained by: Masjid Manager Development Team*

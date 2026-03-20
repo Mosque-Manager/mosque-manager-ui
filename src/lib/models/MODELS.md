@@ -1,6 +1,6 @@
 # Models Spec
 
-> Last Updated: 16 March 2026
+> Last Updated: 20 March 2026
 > Release: R1–R3
 
 ## Overview
